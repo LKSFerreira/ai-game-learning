@@ -1,2 +1,15 @@
+# Bibliotecas fundamentais
 numpy
 matplotlib
+
+# Fase 2: Jogo da Velha (Q-Learning puro)
+# (sem bibliotecas extras necessárias)
+
+# Fase 3: Visão Computacional
+opencv-python>
+Pillow
+pyautogui
+
+# Fase 4: Deep Learning (quando chegar lá)
+# gymnasium>=0.29.0  # sucessor do OpenAI Gym
+# torch>=2.0.0       # ou tensorflow>=2.13.0
