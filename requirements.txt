@@ -6,7 +6,7 @@ matplotlib
 # (sem bibliotecas extras necessárias)
 
 # Fase 3: Visão Computacional
-opencv-python>
+opencv-python
 Pillow
 pyautogui
 
