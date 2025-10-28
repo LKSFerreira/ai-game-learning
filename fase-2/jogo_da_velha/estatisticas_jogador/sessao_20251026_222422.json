@@ -1,0 +1,23 @@
+{
+  "timestamp_inicio": "2025-10-26T21:33:30.168690",
+  "timestamp_fim": "2025-10-26T21:34:38.100440",
+  "total_partidas": 2,
+  "vitorias": 1,
+  "derrotas": 0,
+  "empates": 1,
+  "modelo_ia": "10000",
+  "historico": [
+    {
+      "timestamp": "2025-10-26T21:33:30.168690",
+      "humano_simbolo": "X",
+      "resultado": "empate",
+      "vencedor": 0
+    },
+    {
+      "timestamp": "2025-10-26T21:34:38.100440",
+      "humano_simbolo": "X",
+      "resultado": "vitoria",
+      "vencedor": 1
+    }
+  ]
+}

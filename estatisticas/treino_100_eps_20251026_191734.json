@@ -1,0 +1,50 @@
+{
+  "episodios_totais": 100,
+  "configuracao": {
+    "agente_x": {
+      "alpha": 0.5,
+      "gamma": 0.9,
+      "epsilon_inicial": 1.0,
+      "epsilon_final": 0.951217530242334
+    },
+    "agente_o": {
+      "alpha": 0.5,
+      "gamma": 0.9,
+      "epsilon_inicial": 1.0,
+      "epsilon_final": 0.951217530242334
+    }
+  },
+  "resultados": {
+    "agente_x": {
+      "episodios": 100,
+      "estados_conhecidos": 259,
+      "vitorias": 62,
+      "derrotas": 29,
+      "empates": 9,
+      "taxa_vitoria": 0.62,
+      "taxa_empate": 0.09,
+      "taxa_derrota": 0.29,
+      "epsilon_atual": 0.951217530242334,
+      "jogador": "X"
+    },
+    "agente_o": {
+      "episodios": 100,
+      "estados_conhecidos": 235,
+      "vitorias": 29,
+      "derrotas": 62,
+      "empates": 9,
+      "taxa_vitoria": 0.29,
+      "taxa_empate": 0.09,
+      "taxa_derrota": 0.62,
+      "epsilon_atual": 0.951217530242334,
+      "jogador": "O"
+    }
+  },
+  "historico": {
+    "vitorias_x": [],
+    "vitorias_o": [],
+    "empates": [],
+    "epsilon_x": [],
+    "epsilon_o": []
+  }
+}

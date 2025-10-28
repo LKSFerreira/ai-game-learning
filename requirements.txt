@@ -3,7 +3,8 @@ numpy
 matplotlib
 
 # Fase 2: Jogo da Velha (Q-Learning puro)
-# (sem bibliotecas extras necessárias)
+tqdm
+rich
 
 # Fase 3: Visão Computacional
 opencv-python
