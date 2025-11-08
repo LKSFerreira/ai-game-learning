@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Game Learning - Quiz</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Tela Principal de Seleção de Quiz -->
+    <div class="container-principal" id="tela-selecao">
+        <h1>AI Game Learning 🧠</h1>
+        <p>Selecione um quiz para testar seus conhecimentos</p>
+        <div id="botoes-selecao" class="botoes-selecao">
+            <!-- Botões serão gerados pelo script.js -->
+        </div>
+    </div>
+
+    <!-- Container do Quiz (começa escondido) -->
+    <div class="quiz-container hide" id="quiz-container">
+        <div id="cabecalho-quiz">
+            <h1 id="titulo-quiz"></h1>
+            <p id="descricao-quiz">Teste seus conhecimentos!</p>
+        </div>
+        
+        <div id="corpo-quiz">
+            <p id="contador-pergunta"></p>
+            <h2 id="texto-pergunta">Carregando perguntas...</h2>
+            <div id="botoes-resposta" class="botoes-resposta"></div>
+        </div>
+
+        <div class="controles">
+            <button id="btn-proximo" class="hide">Próxima</button>
+        </div>
+
+        <div id="tela-resultado" class="hide">
+            <h2 id="mensagem-final" class="hide"></h2>
+            <h1>Quiz Finalizado!</h1>
+            <p id="texto-resultado"></p>
+            <button id="btn-reiniciar" class="btn">Tentar Novamente</button>
+            <button id="btn-voltar-menu" class="btn btn-secundario">Voltar ao Menu</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

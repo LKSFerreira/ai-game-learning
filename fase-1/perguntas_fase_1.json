@@ -1,0 +1,141 @@
+{
+  "fase": "fase_1",
+  "titulo": "Fase 1: Fundamentos de IA",
+  "perguntas": [
+    {
+      "pergunta": "Qual a melhor definição para a hierarquia entre IA, Machine Learning e Deep Learning?",
+      "respostas": [
+        { "texto": "IA é um subcampo do ML, que por sua vez é um subcampo do Deep Learning.", "correto": false },
+        { "texto": "Deep Learning é um subcampo do ML, que por sua vez é um subcampo da IA.", "correto": true },
+        { "texto": "ML e Deep Learning são abordagens distintas que compõem a área da IA.", "correto": false },
+        { "texto": "São três termos diferentes para descrever o mesmo conceito de automação.", "correto": false }
+      ]
+    },
+    {
+        "pergunta": "O que caracteriza fundamentalmente o Aprendizado por Reforço (Reinforcement Learning)?",
+        "respostas": [
+            { "texto": "O aprendizado baseado em um grande volume de dados previamente rotulados.", "correto": false },
+            { "texto": "A descoberta de padrões e grupos em dados brutos sem supervisão humana.", "correto": false },
+            { "texto": "O aprendizado obtido pela interação com um ambiente, através de recompensas.", "correto": true },
+            { "texto": "A construção de modelos que imitam a estrutura de redes neurais biológicas.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "No framework de RL, o componente responsável por tomar decisões e executar ações é chamado de:",
+        "respostas": [
+            { "texto": "Ambiente (Environment), pois ele contém todas as regras do mundo.", "correto": false },
+            { "texto": "Estado (State), pois ele representa a situação atual para a decisão.", "correto": false },
+            { "texto": "Agente (Agent), pois ele atua como o 'cérebro' do sistema de IA.", "correto": true },
+            { "texto": "Recompensa (Reward), pois ela guia o objetivo final das decisões.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Para nossa IA do Ragnarok, o conjunto de informações como HP, SP, posição e monstros na tela representa o:",
+        "respostas": [
+            { "texto": "Ação (Action), que é a jogada que o Agente pode executar.", "correto": false },
+            { "texto": "Estado (State), que é a 'fotografia' atual do ambiente.", "correto": true },
+            { "texto": "Política (Policy), que é a estratégia geral aprendida pelo Agente.", "correto": false },
+            { "texto": "Ambiente (Environment), que é o jogo como um todo.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Quando um Agente executa uma ação bem-sucedida e o ambiente lhe fornece um feedback positivo, ele recebe uma:",
+        "respostas": [
+            { "texto": "Ação (Action), que é a escolha realizada pelo Agente.", "correto": false },
+            { "texto": "Política (Policy), que é a estratégia que ele está seguindo.", "correto": false },
+            { "texto": "Recompensa (Reward), que é o sinal de feedback para o aprendizado.", "correto": true },
+            { "texto": "Estado (State), que é a nova configuração do ambiente.", "correto": false }
+        ]
+    },
+     {
+        "pergunta": "O subcampo da IA focado em treinar Redes Neurais com múltiplas camadas para aprender padrões complexos é:",
+        "respostas": [
+            { "texto": "Aprendizado por Reforço, que foca no aprendizado por recompensa.", "correto": false },
+            { "texto": "Algoritmos Genéticos, que simulam o processo de evolução natural.", "correto": false },
+            { "texto": "Sistemas Especialistas, baseados em um conjunto de regras lógicas.", "correto": false },
+            { "texto": "Deep Learning, que utiliza arquiteturas de redes profundas.", "correto": true }
+        ]
+    },
+    {
+        "pergunta": "No Jogo da Velha, o ato de o Agente escolher uma casa vazia para marcar um 'X' é um exemplo de:",
+        "respostas": [
+            { "texto": "Um Estado, pois representa a configuração do tabuleiro.", "correto": false },
+            { "texto": "Uma Ação, pois é uma das jogadas possíveis que o Agente pode fazer.", "correto": true },
+            { "texto": "Uma Recompensa, pois é o feedback recebido após a jogada.", "correto": false },
+            { "texto": "Uma Política, pois é a estratégia que guiou a escolha.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "A estratégia final, ou o 'manual de instruções', que o Agente desenvolve após um treinamento bem-sucedido é chamada de:",
+        "respostas": [
+            { "texto": "Função de Recompensa, o sistema que define os pontos.", "correto": false },
+            { "texto": "Modelo de Ambiente, a representação interna do jogo.", "correto": false },
+            { "texto": "Política (Policy), o mapeamento de estados para ações.", "correto": true },
+            { "texto": "Taxa de Aprendizado, o parâmetro que ajusta o treinamento.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O processo de 'treinar' uma IA de RL consiste em:",
+        "respostas": [
+            { "texto": "Fornecer um conjunto de dados com as respostas corretas para cada estado.", "correto": false },
+            { "texto": "Permitir que o Agente interaja com o ambiente repetidamente para otimizar suas ações.", "correto": true },
+            { "texto": "Escrever manualmente as regras de decisão para todas as situações possíveis.", "correto": false },
+            { "texto": "Compilar o código-fonte do Agente em um formato executável pelo computador.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O dilema do Agente entre usar uma estratégia conhecida ou tentar uma nova para descobrir recompensas melhores é chamado de:",
+        "respostas": [
+            { "texto": "O problema da Atribuição de Crédito, que define qual ação gerou a recompensa.", "correto": false },
+            { "texto": "O desafio da Generalização, que aplica o conhecimento a novas situações.", "correto": false },
+            { "texto": "O trade-off de Exploração vs. 'Exploitation' (aproveitamento).", "correto": true },
+            { "texto": "A maldição da Dimensionalidade, relacionada à complexidade do estado.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Para a nossa IA, o jogo Ragnarok Online como um todo, com suas regras e mecânicas, é considerado o:",
+        "respostas": [
+            { "texto": "Agente (Agent), pois é ele quem executa as lógicas do jogo.", "correto": false },
+            { "texto": "Ambiente (Environment), pois é o mundo com o qual o Agente interage.", "correto": true },
+            { "texto": "Estado (State), pois o jogo inteiro é uma única situação.", "correto": false },
+            { "texto": "Ação (Action), pois o jogo representa uma ação contínua.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Sistemas de recomendação, como os da Netflix ou Amazon, são aplicações clássicas de qual área?",
+        "respostas": [
+            { "texto": "Aprendizado por Reforço, pois aprendem com o feedback de acerto e erro.", "correto": false },
+            { "texto": "Processamento de Linguagem Natural, pois analisam textos de reviews.", "correto": false },
+            { "texto": "Visão Computacional, pois identificam produtos em imagens.", "correto": false },
+            { "texto": "Machine Learning, pois aprendem padrões a partir do histórico do usuário.", "correto": true }
+        ]
+    },
+    {
+        "pergunta": "Qual é o objetivo principal que um Agente de Aprendizado por Reforço tenta alcançar?",
+        "respostas": [
+            { "texto": "Explorar o máximo de estados diferentes dentro do ambiente, para conhecê-lo.", "correto": false },
+            { "texto": "Maximizar a soma cumulativa de recompensas que recebe ao longo do tempo.", "correto": true },
+            { "texto": "Executar as ações que foram programadas pelo desenvolvedor de forma eficiente.", "correto": false },
+            { "texto": "Encontrar o caminho mais curto para um estado terminal, independentemente das recompensas.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Dar uma recompensa de '-100' sempre que o personagem morre no jogo é uma forma de:",
+        "respostas": [
+            { "texto": "Ensinar ao Agente um comportamento indesejado através de uma recompensa negativa.", "correto": true },
+            { "texto": "Criar um bug no sistema, já que recompensas devem ser sempre positivas.", "correto": false },
+            { "texto": "Definir um estado inicial para o Agente, indicando o começo do episódio.", "correto": false },
+            { "texto": "Aumentar a taxa de exploração do Agente, forçando-o a tentar novas ações.", "correto": false }
+        ]
+    },
+     {
+        "pergunta": "Por que Deep Learning é uma abordagem eficaz para o reconhecimento de imagens em jogos?",
+        "respostas": [
+            { "texto": "Ele aprende a partir de regras lógicas que descrevem o conteúdo da imagem.", "correto": false },
+            { "texto": "Sua arquitetura em camadas é ideal para aprender hierarquias de características visuais.", "correto": true },
+            { "texto": "Substitui a necessidade de uma GPU, podendo rodar em qualquer processador.", "correto": false },
+            { "texto": "É um método que não exige dados de treinamento para reconhecer novos objetos.", "correto": false }
+        ]
+    }
+  ]
+}

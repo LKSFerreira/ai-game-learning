@@ -1,0 +1,141 @@
+{
+  "fase": "fase_2",
+  "titulo": "Fase 2: Q-Learning",
+  "perguntas": [
+    {
+      "pergunta": "Qual é o objetivo principal do algoritmo Q-Learning?",
+      "respostas": [
+        { "texto": "Construir uma tabela (Q-Table) que mapeia a 'qualidade' de cada ação em cada estado.", "correto": true },
+        { "texto": "Memorizar sequências de jogadas vencedoras para repeti-las exatamente da mesma forma.", "correto": false },
+        { "texto": "Aprender as regras do jogo a partir do zero, sem nenhuma informação prévia sobre o ambiente.", "correto": false },
+        { "texto": "Diminuir a velocidade do jogo para que o agente tenha mais tempo para tomar uma decisão.", "correto": false }
+      ]
+    },
+    {
+        "pergunta": "Na Equação de Bellman, o que o parâmetro α (alpha) representa, na nossa 'analogia gamer'?",
+        "respostas": [
+            { "texto": "O quão 'visionário' o jogador é, valorizando mais o futuro do que o ganho imediato.", "correto": false },
+            { "texto": "A frequência com que o jogador decide 'explorar o mapa' em vez de 'seguir o guia'.", "correto": false },
+            { "texto": "O quão 'teimoso' ou 'impulsivo' o jogador é ao aprender com uma nova experiência.", "correto": true },
+            { "texto": "A recompensa final que o jogador recebe ao vencer a partida ou completar a missão.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O que o parâmetro γ (gamma), ou Fator de Desconto, controla na estratégia da IA?",
+        "respostas": [
+            { "texto": "A importância que a IA dá para as recompensas futuras em comparação com as recompensas imediatas.", "correto": true },
+            { "texto": "A velocidade com que a IA atualiza sua Tabela Q após cada jogada realizada.", "correto": false },
+            { "texto": "A probabilidade de a IA escolher uma ação completamente aleatória durante o treinamento.", "correto": false },
+            { "texto": "O número máximo de estados que a IA consegue armazenar em sua Tabela Q.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O que significa a estratégia 'Epsilon-Greedy'?",
+        "respostas": [
+            { "texto": "A IA sempre escolhe a ação com o maior valor Q, sendo 'gananciosa' (greedy) o tempo todo.", "correto": false },
+            { "texto": "Um método para equilibrar entre explorar novas jogadas (aleatórias) e aproveitar o conhecimento já adquirido.", "correto": true },
+            { "texto": "Uma técnica para reduzir o tamanho da Tabela Q, economizando memória durante o treinamento.", "correto": false },
+            { "texto": "A IA escolhe a ação que leva à menor punição possível, evitando qualquer tipo de risco.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "No início do treinamento, o valor de ε (epsilon) deve ser alto. Por quê?",
+        "respostas": [
+            { "texto": "Para forçar a IA a usar apenas as melhores jogadas conhecidas desde o começo.", "correto": false },
+            { "texto": "Para que a IA aprenda mais rápido, pois um epsilon alto aumenta a taxa de aprendizado.", "correto": false },
+            { "texto": "Para encorajar a IA a explorar muitas jogadas diferentes, já que sua Q-Table inicial é inútil.", "correto": true },
+            { "texto": "Para garantir que a IA valorize mais as recompensas futuras e planeje a longo prazo.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Em nossa estrutura de projeto, qual arquivo é responsável por conter as regras e a lógica do Jogo da Velha?",
+        "respostas": [
+            { "texto": "agente.py, pois ele é o 'cérebro' que precisa saber as regras para jogar.", "correto": false },
+            { "texto": "ambiente.py, pois ele define o 'mundo' onde o agente vive, incluindo suas mecânicas.", "correto": true },
+            { "texto": "treinador.py, pois ele gerencia as partidas e precisa aplicar as regras do jogo.", "correto": false },
+            { "texto": "jogar.py, pois o jogador humano precisa consultar as regras contidas neste arquivo.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "A Q-Table, o 'cérebro' da nossa IA, é implementada e gerenciada dentro de qual arquivo?",
+        "respostas": [
+            { "texto": "No arquivo ambiente.py, junto com o tabuleiro do jogo.", "correto": false },
+            { "texto": "No arquivo treinador.py, que a utiliza para guiar o aprendizado.", "correto": false },
+            { "texto": "No arquivo agente.py, pois a Q-Table é a representação do seu conhecimento.", "correto": true },
+            { "texto": "No arquivo visualizador.py, que a exibe em formato de gráfico.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O que significa o termo 'self-play' no contexto do nosso treinamento?",
+        "respostas": [
+            { "texto": "Permitir que um jogador humano jogue contra a IA para ensiná-la.", "correto": false },
+            { "texto": "Fazer a IA jogar contra si mesma para gerar uma grande quantidade de experiência.", "correto": true },
+            { "texto": "Rodar o script 'jogar.py' para testar a versão final da IA.", "correto": false },
+            { "texto": "Um modo de jogo onde a IA apenas repete as jogadas que já sabe que são boas.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Se uma ação em um determinado estado tem um Q-value de 1.0 (o valor máximo), o que isso significa?",
+        "respostas": [
+            { "texto": "Que essa ação foi a mais explorada durante todo o treinamento.", "correto": false },
+            { "texto": "Que essa ação é a única jogada legal possível naquele estado do jogo.", "correto": false },
+            { "texto": "Que essa ação leva diretamente a um estado final de vitória com recompensa de 1.0.", "correto": true },
+            { "texto": "Que a IA tem 100% de certeza de que essa é uma boa jogada posicional.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O que é um 'estado' no contexto do Jogo da Velha?",
+        "respostas": [
+            { "texto": "A decisão final de quem ganhou, perdeu ou empatou a partida.", "correto": false },
+            { "texto": "Uma 'fotografia' da configuração atual das peças 'X' e 'O' no tabuleiro.", "correto": true },
+            { "texto": "O número da rodada atual, indicando quantos movimentos já foram feitos.", "correto": false },
+            { "texto": "A estratégia geral que o agente está usando para tentar vencer o jogo.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Na Equação de Bellman, o termo 'max Q(s', a')' representa:",
+        "respostas": [
+            { "texto": "A recompensa imediata recebida após tomar a ação 'a' no estado 's'.", "correto": false },
+            { "texto": "O valor Q máximo que o agente espera obter no próximo estado do jogo.", "correto": true },
+            { "texto": "A média de todos os valores Q para o estado atual 's'.", "correto": false },
+            { "texto": "A probabilidade de transição para o próximo estado 's' ser bem-sucedida.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Por que o Jogo da Velha é um bom problema para começar a aprender Q-Learning?",
+        "respostas": [
+            { "texto": "Porque o número de estados e ações é relativamente pequeno e o treino é rápido.", "correto": true },
+            { "texto": "Porque ele não possui empates, o que simplifica a definição das recompensas.", "correto": false },
+            { "texto": "Porque é impossível para um jogador humano vencer a IA, garantindo o aprendizado.", "correto": false },
+            { "texto": "Porque ele requer o uso de Redes Neurais complexas desde o início do projeto.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Se aumentarmos muito o γ (gamma), para perto de 1.0, que tipo de 'personalidade' a IA desenvolve?",
+        "respostas": [
+            { "texto": "Impaciente e imediatista, focando apenas na recompensa da próxima jogada.", "correto": false },
+            { "texto": "Cautelosa e defensiva, preferindo empatar a arriscar uma derrota.", "correto": false },
+            { "texto": "Estrategista e 'visionária', dando grande importância às recompensas a longo prazo.", "correto": true },
+            { "texto": "Agressiva e exploradora, fazendo mais jogadas aleatórias independente do treino.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "Qual é a principal desvantagem de usar Q-Learning com uma Q-Table?",
+        "respostas": [
+            { "texto": "Ele aprende muito devagar, mesmo em jogos simples como o Jogo da Velha.", "correto": false },
+            { "texto": "Ele se torna inviável para jogos com um número gigantesco de estados, como o xadrez.", "correto": true },
+            { "texto": "Ele não consegue aprender a jogar contra si mesmo (self-play).", "correto": false },
+            { "texto": "Ele só funciona para jogos de um jogador e não pode ser adaptado para dois jogadores.", "correto": false }
+        ]
+    },
+    {
+        "pergunta": "O processo de ajustar o valor Q baseado na 'surpresa' (diferença entre o esperado e o real) é o núcleo de qual equação?",
+        "respostas": [
+            { "texto": "Da Equação de Bellman, que guia a atualização da experiência do agente.", "correto": true },
+            { "texto": "Da estratégia Epsilon-Greedy, que decide quando explorar ou aproveitar.", "correto": false },
+            { "texto": "Do Teorema de Pitágoras, que calcula a distância entre dois estados.", "correto": false },
+            { "texto": "Da Lei de Moore, que prevê o aumento da complexidade dos jogos.", "correto": false }
+        ]
+    }
+  ]
+}
