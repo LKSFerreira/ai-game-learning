@@ -185,8 +185,8 @@ class AgenteQLearning:
         todas as ações que o levaram à vitória.
         """
         self.partidas_treinadas += 1
-        if recompensa_final > 0.5: self.vitorias += 1
-        elif recompensa_final < 0.5: self.derrotas += 1
+        if recompensa_final > 0: self.vitorias += 1
+        elif recompensa_final < 0: self.derrotas += 1
         else: self.empates += 1
 
         # Propaga a recompensa final para trás, valorizando as jogadas
