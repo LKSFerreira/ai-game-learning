@@ -16,6 +16,7 @@ A classe principal, `AmbienteJogoDaVelha`, é responsável por:
    de uma implementação em JavaScript puro.
 """
 
+import random
 import numpy as np
 from typing import List, Tuple
 
@@ -83,7 +84,7 @@ class AmbienteJogoDaVelha:
             O estado inicial do tabuleiro (vetor de zeros).
         """
         self.tabuleiro: np.ndarray = np.zeros(self.numero_de_casas, dtype=int)
-        self.jogador_atual: int = self.jogador_inicial
+        self.jogador_atual = random.choice([1, 2])
         self.partida_finalizada: bool = False
         self.vencedor: int | None = None
         return self.obter_estado()
