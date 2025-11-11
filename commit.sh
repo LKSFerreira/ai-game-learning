@@ -2,30 +2,37 @@
 
 echo "🚀 Iniciando a organização dos commits..."
 
-# --- Bloco 1: Implementação do Ambiente do Jogo ---
-# Refatoramos e implementamos a classe Ambiente, que define as regras do nosso mundo.
-echo "✨ Adicionando e commitando o ambiente do jogo (ambiente.py)..."
-git add fase-2/jogo_da_velha/ambiente.py
-git commit -m "✨ feat: Implementa a classe Ambiente modular e didática com suporte a N x N"
+# --- Bloco 1: Melhorias no Processo de Treinamento ---
+# Agrupamos as melhorias lógicas que fizemos no ambiente e no agente.
+# A principal mudança foi a aleatorização do jogador inicial.
+echo "♻️ Adicionando e commitando as melhorias no ambiente e agente..."
+git add fase-2/jogo_da_velha/ambiente.py fase-2/jogo_da_velha/agente.py
+git commit -m "♻️ refactor: Aleatoriza jogador inicial e aprimora lógica do agente"
 
-# --- Bloco 2: Implementação do Agente Q-Learning ---
-# Implementamos a classe Agente, o cérebro da nossa IA, com toda a lógica de aprendizado.
-echo "✨ Adicionando e commitando o cérebro da IA (agente.py)..."
-git add fase-2/jogo_da_velha/agente.py
-git commit -m "✨ feat: Implementa a classe AgenteQLearning com lógica de aprendizado"
+# --- Bloco 2: Implementação do Treinador e Avaliador ---
+# Adicionamos a funcionalidade de avaliação e a interface rica ao treinador.
+echo "✨ Adicionando e commitando as funcionalidades do treinador e avaliador..."
+git add fase-2/jogo_da_velha/treinador.py
+git commit -m "✨ feat: Implementa avaliação pós-treino e interface rica com 'rich'"
 
-# --- Bloco 3: Adição dos Testes de Unidade ---
-# Criamos os testes que validam o funcionamento isolado do Ambiente e do Agente.
-echo "🧪 Adicionando e commitando os testes de unidade..."
-git add fase-2/jogo_da_velha/test/
-git commit -m "🧪 test: Adiciona testes de unidade para Ambiente e Agente"
+# --- Bloco 3: Adição de Novas Ferramentas ---
+# Adicionamos o script para mesclar modelos e o teste para o treinador.
+echo "✨ Adicionando e commitando novas ferramentas (mesclar_modelos, test_treinador)..."
+git add fase-2/jogo_da_velha/mesclar_modelos.py fase-2/jogo_da_velha/test/test_treinador.py
+git commit -m "✨ feat: Adiciona script para mesclar modelos e teste de integração do treinador"
 
-# --- Bloco 4: Arquivos de Estrutura e Automação ---
-# Adicionamos arquivos que ajudam na organização e automação do projeto.
-echo "🧱 Adicionando e commitando arquivos de estrutura e automação..."
-git add fase-2/jogo_da_velha/__init__.py
-git add commit.sh
-git commit -m "🧱 build: Adiciona __init__.py e script de automação de commits"
+# --- Bloco 4: Limpeza de Arquivos Gerados ---
+# Removemos todos os arquivos de modelos, estatísticas e gráficos que foram gerados
+# durante os testes e não devem ser versionados.
+echo "🧹 Adicionando e commitando a limpeza de arquivos gerados..."
+git add fase-2/jogo_da_velha/estatisticas/ fase-2/jogo_da_velha/estatisticas_jogador/ fase-2/jogo_da_velha/graficos/ fase-2/jogo_da_velha/modelos/
+git commit -m "🧹 cleanup: Remove arquivos de modelos e estatísticas gerados"
+
+# --- Bloco 5: Atualização do .gitignore ---
+# Atualizamos o .gitignore para que o Git ignore essas pastas no futuro.
+echo "🧱 Adicionando e commitando a atualização do .gitignore..."
+git add .gitignore
+git commit -m "🧱 build: Atualiza .gitignore para ignorar pastas de modelos e estatísticas"
 
 
 echo "✅ Processo de commit finalizado!"
