@@ -1,531 +1,273 @@
 """
-Treinador de Agentes Q-Learning por Self-Play
+Módulo: 🏛️ treinador.py
+Projeto: 📘 AI Game Learning
 
-Esta versão apresenta:
-- Barra de progresso + janela de estatísticas atualizando em tempo real
-  ocupando apenas o espaço mínimo necessário (compact).
-- Suporte a dois modos:
-  * rich (quando disponível) -> melhor experiência visual com Live.
-  * fallback para tqdm quando rich não estiver instalado.
+Este módulo é o "Mestre da Guilda" ou o "Dungeon Master".
+Ele é responsável por orquestrar o treinamento dos Agentes,
+colocando-os para batalhar entre si em um processo chamado "self-play".
 
-Substitua/integre este arquivo no seu projeto. Depende de:
-- ambiente.JogoVelha
-- agente.AgenteQLearning
+Responsabilidades:
+- Gerenciar o loop de treinamento principal (milhares de partidas).
+- Coordenar a interação entre os Agentes e o Ambiente.
+- Atribuir as recompensas corretas a cada Agente no final da partida.
+- Exibir estatísticas de treinamento em tempo real com uma interface rica.
+- Salvar o conhecimento (modelos) e estatísticas dos Agentes treinados.
 """
-
-from __future__ import annotations
 
 import time
 import json
 from pathlib import Path
-from typing import Tuple, Dict, List
+from typing import Tuple
 
-# Tenta importar rich para UI avançada; se não houver, usa tqdm como fallback.
+# Tenta importar a biblioteca 'rich' para uma interface visual avançada.
+# Se não estiver instalada, define RICH_DISPONIVEL como False.
 try:
     from rich.live import Live
     from rich.table import Table
-    from rich.console import Group
     from rich.panel import Panel
-    from rich.progress import (
-        Progress,
-        BarColumn,
-        TextColumn,
-        TimeRemainingColumn,
-        SpinnerColumn,
-    )
+    from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
+    RICH_DISPONIVEL = True
+except ImportError:
+    RICH_DISPONIVEL = False
 
-    RICH_AVAILABLE = True
-except Exception:
-    RICH_AVAILABLE = False
-
+# Tqdm é usado como uma alternativa mais simples se 'rich' não estiver disponível.
 from tqdm import tqdm
 
-# Importa nossos módulos criados anteriormente (devem existir no seu projeto)
-from ambiente import JogoVelha
+from ambiente import AmbienteJogoDaVelha
 from agente import AgenteQLearning
 
-
-class TreinadorSelfPlay:
+class Treinador:
     """
-    Classe responsável por treinar dois agentes jogando entre si.
-
-    A interface foi desenhada para não imprimir linhas durante o loop de
-    treinamento — tudo é atualizado em-place (sem rolagem).
+    Orquestra o treinamento de dois agentes Q-Learning através de self-play,
+    com uma interface de usuário rica para acompanhamento em tempo real.
     """
-
-    def __init__(
-        self,
-        agente_x: AgenteQLearning,
-        agente_o: AgenteQLearning,
-        verbose: bool = True,
-    ):
-        """
-        Inicializa o treinador com dois agentes.
-
-        Args:
-            agente_x: Agente que joga como X (jogador 1)
-            agente_o: Agente que joga como O (jogador 2)
-            verbose: Se True, mostra a interface; se False, executa silenciosamente.
-        """
+    def __init__(self, agente_x: AgenteQLearning, agente_o: AgenteQLearning, ambiente: AmbienteJogoDaVelha):
         self.agente_x = agente_x
         self.agente_o = agente_o
-        self.ambiente = JogoVelha()
-        self.verbose = verbose
-
-        # Histórico para salvar por janelas
-        self.historico_vitorias_x: List[int] = []
-        self.historico_vitorias_o: List[int] = []
-        self.historico_empates: List[int] = []
-        self.historico_epsilon_x: List[float] = []
-        self.historico_epsilon_o: List[float] = []
-
-        # Pastas
-        self.pasta_modelos = Path("modelos")
-        self.pasta_estatisticas = Path("estatisticas")
+        self.ambiente = ambiente
+        self.pasta_modelos = Path("modelos_treinados")
         self.pasta_modelos.mkdir(exist_ok=True)
-        self.pasta_estatisticas.mkdir(exist_ok=True)
 
-        # Controle do último checkpoint salvo (apenas para exibição)
-        self.ultimo_checkpoint: int | None = None
+    def executar_uma_partida(self) -> int:
+        """ Executa uma única partida (um episódio) entre os dois agentes. """
+        self.ambiente.reiniciar_partida()
+        self.agente_x.iniciar_nova_partida()
+        self.agente_o.iniciar_nova_partida()
 
-    def executar_episodio(self) -> Tuple[int, int]:
-        """
-        Executa um episódio (uma partida) completo.
-
-        Returns:
-            (vencedor, numero_jogadas)
-            vencedor: 1 (X), 2 (O), 0 (empate)
-        """
-        estado = self.ambiente.resetar()
-        self.agente_x.iniciar_episodio()
-        self.agente_o.iniciar_episodio()
-
-        numero_jogadas = 0
-
-        while not self.ambiente.finalizado:
-            agente_atual = (
-                self.agente_x if self.ambiente.jogador_atual == 1 else self.agente_o
-            )
-
-            estado_atual = self.ambiente.obter_estado()
+        while not self.ambiente.partida_finalizada:
+            agente_da_vez = self.agente_x if self.ambiente.jogador_atual == 1 else self.agente_o
+            estado_atual = self.ambiente.obter_estado_como_tupla()
             acoes_validas = self.ambiente.obter_acoes_validas()
+            acao_escolhida = agente_da_vez.escolher_acao(estado_atual, acoes_validas, em_treinamento=True)
+            agente_da_vez.registrar_jogada(estado_atual, acao_escolhida)
+            self.ambiente.executar_jogada(acao_escolhida)
 
-            acao = agente_atual.escolher_acao(estado_atual, acoes_validas, treino=True)
-            agente_atual.registrar_jogada(estado_atual, acao)
-
-            _, _, finalizado = self.ambiente.fazer_jogada(acao)
-            numero_jogadas += 1
-
-            if finalizado:
-                if self.ambiente.vencedor == 1:
-                    recompensa_x, recompensa_o = 1.0, -1.0
-                elif self.ambiente.vencedor == 2:
-                    recompensa_x, recompensa_o = -1.0, 1.0
-                else:
-                    recompensa_x, recompensa_o = 0.0, 0.0
-
-                self.agente_x.finalizar_episodio(recompensa_x)
-                self.agente_o.finalizar_episodio(recompensa_o)
-
-        return self.ambiente.vencedor, numero_jogadas
-
-    def treinar(
-        self,
-        episodios: int = 20000,
-        intervalo_estatisticas: int = 1000,
-        intervalo_checkpoint: int = 5000,
-        salvar_final: bool = True,
-    ):
-        """
-        Executa o treinamento completo dos agentes com UI compacta (barra + stats).
-        """
-        if self.verbose:
-            print("\n" + "=" * 70)
-            print("🎮 INICIANDO TREINAMENTO POR SELF-PLAY")
-            print("=" * 70)
-            print(f"Total de episódios: {episodios:,}")
-            print(f"Agente X: Alpha={self.agente_x.alpha}, Gamma={self.agente_x.gamma}")
-            print(f"Agente O: Alpha={self.agente_o.alpha}, Gamma={self.agente_o.gamma}")
-            print(
-                f"Epsilon inicial: X={self.agente_x.epsilon:.6f}, O={self.agente_o.epsilon:.6f}"
-            )
-            print("=" * 70 + "\n")
-
-        # Variáveis da janela
-        vitorias_x_janela = 0
-        vitorias_o_janela = 0
-        empates_janela = 0
-
-        tempo_inicio = time.time()
-
-        # ---------- Parâmetros de compactação (ajustáveis) ----------
-        MAX_BAR_WIDTH = 40  # largura máxima da barra (caracteres)
-        MAX_TABLE_COL_WIDTH = 18  # largura por coluna da tabela (caracteres)
-        # ------------------------------------------------------------
-
-        if RICH_AVAILABLE and self.verbose:
-            # --- MODO RICH (melhor experiência, compacta) ---
-            progress = Progress(
-                SpinnerColumn(),
-                TextColumn("{task.description}"),
-                BarColumn(bar_width=MAX_BAR_WIDTH),
-                TextColumn("{task.percentage:>3.0f}%"),
-                TimeRemainingColumn(),
-                expand=False,  # NÃO ocupar largura total
-            )
-            task_id = progress.add_task("Treinando", total=episodios)
-
-            def montar_tabela_compacta(episodio_atual: int) -> Panel:
-                tabela = Table.grid(expand=False)
-                tabela.add_column(justify="left", width=MAX_TABLE_COL_WIDTH)
-                tabela.add_column(justify="right", width=MAX_TABLE_COL_WIDTH)
-
-                taxa_empate = (
-                    empates_janela
-                    / max(1, (vitorias_x_janela + vitorias_o_janela + empates_janela))
-                ) * 100
-
-                tabela.add_row("Episódio", f"{episodio_atual:,}/{episodios:,}")
-                tabela.add_row("Eps X", f"{self.agente_x.epsilon:.6f}")
-                tabela.add_row("Eps O", f"{self.agente_o.epsilon:.6f}")
-                tabela.add_row("Janela X", f"{vitorias_x_janela}")
-                tabela.add_row("Janela O", f"{vitorias_o_janela}")
-                tabela.add_row("Janela Emp", f"{empates_janela}")
-                tabela.add_row("Empate %", f"{taxa_empate:.1f}%")
-                tabela.add_row("Q-States X", f"{len(self.agente_x.q_table):,}")
-                tabela.add_row("Q-States O", f"{len(self.agente_o.q_table):,}")
-                tabela.add_row(
-                    "Ult. Checkpoint",
-                    f"{self.ultimo_checkpoint if self.ultimo_checkpoint is not None else '-'}",
-                )
-
-                painel = Panel(
-                    tabela, title="Estatísticas (janela)", expand=False, padding=(0, 1)
-                )
-                return painel
-
-            # Live com layout compacto: painel do progress + painel da tabela lado a lado
-            with Live(refresh_per_second=6) as live:
-                live.update(
-                    Group(
-                        Panel(progress, expand=False, padding=(0, 1)),
-                        montar_tabela_compacta(0),
-                    )
-                )
-
-                for episodio in range(episodios):
-                    vencedor, _ = self.executar_episodio()
-
-                    if vencedor == 1:
-                        vitorias_x_janela += 1
-                    elif vencedor == 2:
-                        vitorias_o_janela += 1
-                    else:
-                        empates_janela += 1
-
-                    progress.update(task_id, advance=1)
-
-                    # Checkpoint estatístico (janela)
-                    if (episodio + 1) % intervalo_estatisticas == 0:
-                        total_janela = intervalo_estatisticas
-                        taxa_x = (vitorias_x_janela / total_janela) * 100
-                        taxa_o = (vitorias_o_janela / total_janela) * 100
-                        taxa_emp = (empates_janela / total_janela) * 100
-
-                        # Salva no histórico (para persistência)
-                        self.historico_vitorias_x.append(vitorias_x_janela)
-                        self.historico_vitorias_o.append(vitorias_o_janela)
-                        self.historico_empates.append(empates_janela)
-                        self.historico_epsilon_x.append(self.agente_x.epsilon)
-                        self.historico_epsilon_o.append(self.agente_o.epsilon)
-
-                        # Reseta janela
-                        vitorias_x_janela = 0
-                        vitorias_o_janela = 0
-                        empates_janela = 0
-
-                    # Checkpoint de salvamento (silencioso)
-                    if (episodio + 1) % intervalo_checkpoint == 0:
-                        self._salvar_checkpoint(episodio + 1)
-                        self.ultimo_checkpoint = episodio + 1
-
-                    # Atualiza a Live com layout compacto (in-place)
-                    live.update(
-                        Group(
-                            Panel(progress, expand=False, padding=(0, 1)),
-                            montar_tabela_compacta(episodio + 1),
-                        )
-                    )
-
+        if self.ambiente.vencedor == 1:
+            recompensa_x, recompensa_o = 1.0, -1.0
+        elif self.ambiente.vencedor == 2:
+            recompensa_x, recompensa_o = -1.0, 1.0
         else:
-            # --- MODO TQDM (fallback) ---
-            with tqdm(
-                total=episodios, desc="Treinando", disable=not self.verbose
-            ) as pbar:
-                for episodio in range(episodios):
-                    vencedor, _ = self.executar_episodio()
+            recompensa_x, recompensa_o = 0.0, 0.0
+            
+        self.agente_x.aprender_com_fim_de_partida(recompensa_x)
+        self.agente_o.aprender_com_fim_de_partida(recompensa_o)
+        
+        return self.ambiente.vencedor
 
-                    if vencedor == 1:
-                        vitorias_x_janela += 1
-                    elif vencedor == 2:
-                        vitorias_o_janela += 1
-                    else:
-                        empates_janela += 1
+    def treinar(self, numero_de_partidas: int = 50000, intervalo_log: int = 1000, intervalo_checkpoint: int = 10000):
+        """ Executa o loop de treinamento principal com interface visual. """
+        print("\n" + "="*50)
+        print("⚔️ INICIANDO TREINAMENTO INTENSIVO (SELF-PLAY) ⚔️")
+        print("="*50)
+        print(f"Total de Partidas: {numero_de_partidas:,}")
+        print(f"Interface Gráfica: {'Rich (Avançada)' if RICH_DISPONIVEL else 'TQDM (Básica)'}")
+        print("="*50 + "\n")
 
-                    total_window = (
-                        vitorias_x_janela + vitorias_o_janela + empates_janela
-                    )
-                    taxa_empate = (
-                        (empates_janela / total_window) * 100
-                        if total_window > 0
-                        else 0.0
-                    )
+        vitorias_x_janela, vitorias_o_janela, empates_janela = 0, 0, 0
+        ultimo_checkpoint = None
 
-                    postfix = {
-                        "EpsX": f"{self.agente_x.epsilon:.4f}",
-                        "EpsO": f"{self.agente_o.epsilon:.4f}",
-                        "Emp%": f"{taxa_empate:.1f}%",
-                        "QX": f"{len(self.agente_x.q_table):,}",
-                        "QO": f"{len(self.agente_o.q_table):,}",
-                        "chk": f"{self.ultimo_checkpoint if self.ultimo_checkpoint is not None else '-'}",
-                    }
+        if RICH_DISPONIVEL:
+            # --- MODO RICH (Interface Avançada) ---
+            progresso = Progress(TextColumn("[bold blue]{task.description}"), BarColumn(), TextColumn("{task.percentage:>3.0f}%"), TimeRemainingColumn())
+            id_tarefa = progresso.add_task("Treinando", total=numero_de_partidas)
 
-                    pbar.set_postfix(postfix)
+            def gerar_painel_estatisticas() -> Panel:
+                tabela = Table.grid(expand=True)
+                tabela.add_column(justify="left"); tabela.add_column(justify="right")
+                total_janela = vitorias_x_janela + vitorias_o_janela + empates_janela or 1
+                tabela.add_row("Vitórias X (janela)", f"[bold green]{vitorias_x_janela}[/]")
+                tabela.add_row("Vitórias O (janela)", f"[bold yellow]{vitorias_o_janela}[/]")
+                tabela.add_row("Empates (janela)", f"{empates_janela}")
+                tabela.add_row("Taxa de Empate %", f"{(empates_janela / total_janela) * 100:.1f}%")
+                tabela.add_row("-" * 20, "-" * 20)
+                tabela.add_row("Epsilon X", f"{self.agente_x.epsilon:.6f}")
+                tabela.add_row("Epsilon O", f"{self.agente_o.epsilon:.6f}")
+                tabela.add_row("Estados Conhecidos X", f"{len(self.agente_x.tabela_q):,}")
+                tabela.add_row("Estados Conhecidos O", f"{len(self.agente_o.tabela_q):,}")
+                tabela.add_row("Último Checkpoint", f"{ultimo_checkpoint or 'Nenhum'}")
+                return Panel(tabela, title="[bold]Estatísticas da Janela[/]", border_style="blue")
 
-                    if (episodio + 1) % intervalo_estatisticas == 0:
-                        self.historico_vitorias_x.append(vitorias_x_janela)
-                        self.historico_vitorias_o.append(vitorias_o_janela)
-                        self.historico_empates.append(empates_janela)
-                        self.historico_epsilon_x.append(self.agente_x.epsilon)
-                        self.historico_epsilon_o.append(self.agente_o.epsilon)
+            layout = Table.grid(expand=True)
+            layout.add_row(Panel(progresso, title="[bold]Progresso Geral[/]", border_style="green"), gerar_painel_estatisticas())
 
-                        # reseta
-                        vitorias_x_janela = 0
-                        vitorias_o_janela = 0
-                        empates_janela = 0
+            with Live(layout, refresh_per_second=10) as live:
+                for i in range(numero_de_partidas):
+                    vencedor = self.executar_uma_partida()
+                    if vencedor == 1: vitorias_x_janela += 1
+                    elif vencedor == 2: vitorias_o_janela += 1
+                    else: empates_janela += 1
 
-                    if (episodio + 1) % intervalo_checkpoint == 0:
-                        self._salvar_checkpoint(episodio + 1)
-                        self.ultimo_checkpoint = episodio + 1
-                        pbar.set_postfix(postfix)
+                    progresso.update(id_tarefa, advance=1)
 
-                    pbar.update(1)
+                    if (i + 1) % intervalo_log == 0:
+                        live.update(layout) # Força atualização para exibir os números corretos
+                        vitorias_x_janela, vitorias_o_janela, empates_janela = 0, 0, 0
+                    
+                    if (i + 1) % intervalo_checkpoint == 0:
+                        self._salvar_checkpoint(i + 1)
+                        ultimo_checkpoint = f"{i+1:,}"
 
-        # Finalização — prints fora do loop (apenas no fim)
-        tempo_total = time.time() - tempo_inicio
-
-        if self.verbose:
-            print("\n" + "=" * 70)
-            print("✅ TREINAMENTO CONCLUÍDO!")
-            print("=" * 70)
-            print(
-                f"Tempo total: {tempo_total:.2f} segundos ({tempo_total/60:.2f} minutos)"
-            )
-            print(f"Velocidade: {episodios/tempo_total:.1f} episódios/segundo")
-            print()
-
-        # Estatísticas finais (métodos do agente devem existir)
+                    if i % 250 == 0: # Atualiza a tabela de estatísticas periodicamente
+                        layout.columns[1]._cells[0] = gerar_painel_estatisticas()
+        else:
+            # --- MODO TQDM (Interface Básica) ---
+            for i in tqdm(range(numero_de_partidas), desc="Treinando"):
+                vencedor = self.executar_uma_partida()
+                # A lógica de atualização do TQDM é mais simples e já está embutida no seu loop
+        
+        print("\n" + "="*50)
+        print("✅ TREINAMENTO CONCLUÍDO!")
+        print("="*50)
+        
         self.agente_x.imprimir_estatisticas()
         self.agente_o.imprimir_estatisticas()
+        
+        self._salvar_modelos_finais()
 
-        if salvar_final:
-            self._salvar_modelos_finais(episodios)
-            self._salvar_estatisticas(episodios)
+    def _salvar_checkpoint(self, numero_partida: int):
+        """ Salva o estado atual dos agentes em um checkpoint. """
+        caminho_x = self.pasta_modelos / f"agente_x_checkpoint_{numero_partida}.pkl"
+        caminho_o = self.pasta_modelos / f"agente_o_checkpoint_{numero_partida}.pkl"
+        self.agente_x.salvar_memoria(str(caminho_x))
+        self.agente_o.salvar_memoria(str(caminho_o))
 
-    def _salvar_checkpoint(self, episodio: int):
-        """
-        Salva silenciosamente um checkpoint — sem prints nem tqdm.write.
-        O objetivo é não inserir linhas no terminal durante o treinamento.
-        """
-        caminho_x = self.pasta_modelos / f"agente_x_checkpoint_{episodio}.pkl"
-        caminho_o = self.pasta_modelos / f"agente_o_checkpoint_{episodio}.pkl"
+    def _salvar_modelos_finais(self):
+        """ Salva os modelos finais após o término do treinamento. """
+        caminho_x = self.pasta_modelos / f"agente_x_final_{self.ambiente.dimensao}x{self.ambiente.dimensao}.pkl"
+        caminho_o = self.pasta_modelos / f"agente_o_final_{self.ambiente.dimensao}x{self.ambiente.dimensao}.pkl"
+        self.agente_x.salvar_memoria(str(caminho_x))
+        self.agente_o.salvar_memoria(str(caminho_o))
+    
+    def avaliar_agentes(self, numero_de_partidas: int = 100000):
+            """
+            Coloca os agentes para jogar um contra o outro em modo de "performance máxima",
+            com uma interface rica para acompanhamento em tempo real.
+            """
+            print("\n" + "="*50)
+            print("🏆 INICIANDO MODO DE AVALIAÇÃO (SEM EXPLORAÇÃO) 🏆")
+            print("="*50)
 
-        self.agente_x.salvar(str(caminho_x))
-        self.agente_o.salvar(str(caminho_o))
+            # --- LÓGICA DE CARREGAMENTO AUTOMÁTICO ---
+            if not self.agente_x.tabela_q:
+                print("Agente X não treinado. Tentando carregar modelo do disco...")
+                caminho_x = self.pasta_modelos / f"superagente_final_{self.ambiente.dimensao}x{self.ambiente.dimensao}.pkl"
+                self.agente_x = AgenteQLearning.carregar(str(caminho_x), jogador=1)
 
-    def _salvar_modelos_finais(self, episodios: int):
-        if self.verbose:
-            print("\n💾 Salvando modelos finais...")
+            if not self.agente_o.tabela_q:
+                print("Agente O não treinado. Tentando carregar modelo do disco...")
+                caminho_o = self.pasta_modelos / f"agente_o_final_{self.ambiente.dimensao}x{self.ambiente.dimensao}.pkl"
+                self.agente_o = AgenteQLearning.carregar(str(caminho_o), jogador=2)
+            
+            vitorias_x, vitorias_o, empates = 0, 0, 0
 
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        caminho_x = (
-            self.pasta_modelos / f"agente_x_final_{episodios}_eps_{timestamp}.pkl"
-        )
-        caminho_o = (
-            self.pasta_modelos / f"agente_o_final_{episodios}_eps_{timestamp}.pkl"
-        )
+            # --- LÓGICA DE INTERFACE ---
+            if RICH_DISPONIVEL:
+                progresso = Progress(TextColumn("[bold blue]{task.description}"), BarColumn(), TextColumn("{task.percentage:>3.0f}%"), TimeRemainingColumn())
+                id_tarefa = progresso.add_task("Avaliando", total=numero_de_partidas)
 
-        self.agente_x.salvar(str(caminho_x))
-        self.agente_o.salvar(str(caminho_o))
+                def gerar_painel_estatisticas_avaliacao() -> Panel:
+                    tabela = Table.grid(expand=True)
+                    tabela.add_column(justify="left"); tabela.add_column(justify="right")
+                    total_partidas = vitorias_x + vitorias_o + empates or 1
+                    
+                    tabela.add_row("Vitórias X", f"[bold green]{vitorias_x}[/]")
+                    tabela.add_row("Vitórias O", f"[bold yellow]{vitorias_o}[/]")
+                    tabela.add_row("Empates", f"{empates}")
+                    tabela.add_row("-" * 20, "-" * 20)
+                    tabela.add_row("Taxa de Empate %", f"{(empates / total_partidas) * 100:.2f}%")
+                    tabela.add_row("Estados Conhecidos X", f"{len(self.agente_x.tabela_q):,}")
+                    tabela.add_row("Estados Conhecidos O", f"{len(self.agente_o.tabela_q):,}")
+                    
+                    return Panel(tabela, title="[bold]Estatísticas em Tempo Real[/]", border_style="blue")
 
-        if self.verbose:
-            print(f"✅ Modelos salvos na pasta '{self.pasta_modelos}/'")
+                layout = Table.grid(expand=True)
+                layout.add_row(Panel(progresso, title="[bold]Progresso da Avaliação[/]", border_style="green"), gerar_painel_estatisticas_avaliacao())
 
-    def _salvar_estatisticas(self, episodios: int):
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        caminho = self.pasta_estatisticas / f"treino_{episodios}_eps_{timestamp}.json"
+                with Live(layout, refresh_per_second=10) as live:
+                    for i in range(numero_de_partidas):
+                        self.ambiente.reiniciar_partida()
+                        while not self.ambiente.partida_finalizada:
+                            agente_da_vez = self.agente_x if self.ambiente.jogador_atual == 1 else self.agente_o
+                            estado = self.ambiente.obter_estado_como_tupla()
+                            acoes = self.ambiente.obter_acoes_validas()
+                            acao = agente_da_vez.escolher_acao(estado, acoes, em_treinamento=False)
+                            self.ambiente.executar_jogada(acao)
 
-        dados = {
-            "episodios_totais": episodios,
-            "configuracao": {
-                "agente_x": {
-                    "alpha": self.agente_x.alpha,
-                    "gamma": self.agente_x.gamma,
-                    "epsilon_inicial": 1.0,
-                    "epsilon_final": self.agente_x.epsilon,
-                },
-                "agente_o": {
-                    "alpha": self.agente_o.alpha,
-                    "gamma": self.agente_o.gamma,
-                    "epsilon_inicial": 1.0,
-                    "epsilon_final": self.agente_o.epsilon,
-                },
-            },
-            "resultados": {
-                "agente_x": self.agente_x.obter_estatisticas(),
-                "agente_o": self.agente_o.obter_estatisticas(),
-            },
-            "historico": {
-                "vitorias_x": self.historico_vitorias_x,
-                "vitorias_o": self.historico_vitorias_o,
-                "empates": self.historico_empates,
-                "epsilon_x": self.historico_epsilon_x,
-                "epsilon_o": self.historico_epsilon_o,
-            },
-        }
+                        if self.ambiente.vencedor == 1: vitorias_x += 1
+                        elif self.ambiente.vencedor == 2: vitorias_o += 1
+                        else: empates += 1
+                        
+                        progresso.update(id_tarefa, advance=1)
+                        
+                        # Atualiza o painel de estatísticas periodicamente para não sobrecarregar
+                        if i % 250 == 0:
+                            layout.columns[1]._cells[0] = gerar_painel_estatisticas_avaliacao()
+                    
+                    # Garante que a estatística final seja a mais atualizada
+                    layout.columns[1]._cells[0] = gerar_painel_estatisticas_avaliacao()
 
-        with open(caminho, "w", encoding="utf-8") as arquivo:
-            json.dump(dados, arquivo, indent=2, ensure_ascii=False)
-
-        if self.verbose:
-            print(f"📊 Estatísticas salvas em '{caminho}'")
-
-    def avaliar_agentes(self, num_partidas: int = 100) -> Dict:
-        """
-        Avalia o desempenho dos agentes sem exploração (treino=False).
-        """
-        print(f"\n🎯 AVALIANDO AGENTES ({num_partidas} partidas)...")
-
-        vitorias_x = 0
-        vitorias_o = 0
-        empates = 0
-
-        for _ in tqdm(range(num_partidas), desc="Avaliando"):
-            estado = self.ambiente.resetar()
-
-            while not self.ambiente.finalizado:
-                agente = (
-                    self.agente_x if self.ambiente.jogador_atual == 1 else self.agente_o
-                )
-                estado_atual = self.ambiente.obter_estado()
-                acoes_validas = self.ambiente.obter_acoes_validas()
-                acao = agente.escolher_acao(estado_atual, acoes_validas, treino=False)
-                self.ambiente.fazer_jogada(acao)
-
-            if self.ambiente.vencedor == 1:
-                vitorias_x += 1
-            elif self.ambiente.vencedor == 2:
-                vitorias_o += 1
             else:
-                empates += 1
+                # Fallback para TQDM
+                for _ in tqdm(range(numero_de_partidas), desc="Avaliando Performance"):
+                    # ... (lógica do TQDM permanece a mesma) ...
+                    self.ambiente.reiniciar_partida()
+                    while not self.ambiente.partida_finalizada:
+                        agente_da_vez = self.agente_x if self.ambiente.jogador_atual == 1 else self.agente_o
+                        estado = self.ambiente.obter_estado_como_tupla()
+                        acoes = self.ambiente.obter_acoes_validas()
+                        acao = agente_da_vez.escolher_acao(estado, acoes, em_treinamento=False)
+                        self.ambiente.executar_jogada(acao)
 
-        taxa_x = (vitorias_x / num_partidas) * 100
-        taxa_o = (vitorias_o / num_partidas) * 100
-        taxa_empate = (empates / num_partidas) * 100
+                    if self.ambiente.vencedor == 1: vitorias_x += 1
+                    elif self.ambiente.vencedor == 2: vitorias_o += 1
+                    else: empates += 1
 
-        resultados = {
-            "partidas": num_partidas,
-            "vitorias_x": vitorias_x,
-            "vitorias_o": vitorias_o,
-            "empates": empates,
-            "taxa_vitoria_x": taxa_x,
-            "taxa_vitoria_o": taxa_o,
-            "taxa_empate": taxa_empate,
-        }
+            print("\n--- RESULTADO FINAL DA AVALIAÇÃO ---")
+            print(f"Partidas Jogadas: {numero_de_partidas}")
+            print(f"Vitórias de X: {vitorias_x} ({(vitorias_x/numero_de_partidas)*100:.1f}%)")
+            print(f"Vitórias de O: {vitorias_o} ({(vitorias_o/numero_de_partidas)*100:.1f}%)")
+            print(f"Empates: {empates} ({(empates/numero_de_partidas)*100:.1f}%)")
+            print("="*50 + "\n")
 
-        print("\n📊 RESULTADOS DA AVALIAÇÃO:")
-        print(f"X venceu: {vitorias_x:>3}/{num_partidas} ({taxa_x:>5.1f}%)")
-        print(f"O venceu: {vitorias_o:>3}/{num_partidas} ({taxa_o:>5.1f}%)")
-        print(f"Empates:  {empates:>3}/{num_partidas} ({taxa_empate:>5.1f}%)")
-
-        if taxa_empate > 95:
-            print(
-                "\n🤝 PERFEITO! Os agentes atingiram o equilíbrio de Nash (ou algo muito próximo)."
-            )
-        elif taxa_empate > 75:
-            print("\n🏆 EXCELENTE! Ambos os agentes jogam quase perfeitamente.")
-        elif taxa_empate > 50:
-            print(
-                "\n👍 BOM! Os agentes estão jogando bem, mas ainda há espaço para melhoria."
-            )
-        else:
-            print("\n⚠️  Os agentes precisam de mais treinamento.")
-
-        return resultados
-
-
-# ===== Funções auxiliares de conveniência =====
-def treinar_novo_modelo(episodios: int = 20000, alpha: float = 0.5, gamma: float = 0.9):
-    agente_x = AgenteQLearning(
-        alpha=alpha,
-        gamma=gamma,
-        epsilon=1.0,
-        epsilon_min=0.01,
-        epsilon_decay=0.9995,
-        jogador=1,
-    )
-    agente_o = AgenteQLearning(
-        alpha=alpha,
-        gamma=gamma,
-        epsilon=1.0,
-        epsilon_min=0.01,
-        epsilon_decay=0.9995,
-        jogador=2,
-    )
-
-    treinador = TreinadorSelfPlay(agente_x, agente_o, verbose=True)
-
-    treinador.treinar(
-        episodios=episodios,
-        intervalo_estatisticas=1000,
-        intervalo_checkpoint=5000,
-        salvar_final=True,
-    )
-    treinador.avaliar_agentes(num_partidas=100)
-    return treinador
-
-
-def continuar_treinamento(
-    caminho_agente_x: str, caminho_agente_o: str, episodios_adicionais: int = 10000
-):
-    agente_x = AgenteQLearning.carregar(caminho_agente_x)
-    agente_o = AgenteQLearning.carregar(caminho_agente_o)
-    treinador = TreinadorSelfPlay(agente_x, agente_o, verbose=True)
-    treinador.treinar(
-        episodios=episodios_adicionais,
-        intervalo_estatisticas=1000,
-        intervalo_checkpoint=5000,
-        salvar_final=True,
-    )
-    treinador.avaliar_agentes(num_partidas=100)
-    return treinador
-
-
-def teste_rapido():
-    print("\n" + "=" * 70)
-    print("🧪 TESTE RÁPIDO DO TREINADOR")
-    print("=" * 70)
-    print("Treinando por apenas 1.000 episódios para testar...\n")
-    treinador = treinar_novo_modelo(episodios=1000, alpha=0.5, gamma=0.9)
-    print("\n✅ Teste concluído!")
-
-
+# --- Bloco de Execução Principal ---
 if __name__ == "__main__":
-    # Opção 1: Teste rápido (1.000 episódios)
-    # teste_rapido()
+    # Opção 1: Treinamento Padrão (3x3, 50.000 partidas)
+    # Roda um treinamento completo e salva os modelos.
+    ambiente_padrao = AmbienteJogoDaVelha(dimensao=3)
+    agente_x_padrao = AgenteQLearning(jogador=1)
+    agente_o_padrao = AgenteQLearning(jogador=2)
+    
+    treinador_padrao = Treinador(agente_x_padrao, agente_o_padrao, ambiente_padrao)
+    treinador_padrao.treinar(numero_de_partidas=800000, intervalo_log=5000, intervalo_checkpoint=200000)
+    
+    treinador_padrao.avaliar_agentes()
 
-    # Opção 2: Treinamento completo (50.000 episódios)
-    treinar_novo_modelo(episodios=10000)
-
-    # Opção 3: Treinamento custom
-    # treinar_novo_modelo(episodios=20000, alpha=0.3, gamma=0.95)
+    # Opção 2: Treinamento Customizado (ex: 4x4, 100.000 partidas)
+    # Descomente as linhas abaixo para rodar um treino diferente.
+    # print("\n--- INICIANDO TREINAMENTO CUSTOMIZADO 4x4 ---")
+    # ambiente_4x4 = AmbienteJogoDaVelha(dimensao=4)
+    # agente_x_4x4 = AgenteQLearning(jogador=1, taxa_decaimento_epsilon=0.9999)
+    # agente_o_4x4 = AgenteQLearning(jogador=2, taxa_decaimento_epsilon=0.9999)
+    #
+    # treinador_4x4 = Treinador(agente_x_4x4, agente_o_4x4, ambiente_4x4)
+    # treinador_4x4.treinar(numero_de_partidas=100000, intervalo_log=10000)
