@@ -14,8 +14,8 @@ Responsabilidades:
 - Salvar o conhecimento (modelos) e estatísticas dos Agentes treinados.
 """
 
-import time
-import json
+from datetime import datetime
+import os
 from pathlib import Path
 from typing import Tuple
 
@@ -47,6 +47,8 @@ class Treinador:
         self.ambiente = ambiente
         self.pasta_modelos = Path("modelos_treinados")
         self.pasta_modelos.mkdir(exist_ok=True)
+        self._checkpoints = []  # Lista para armazenar metadados dos checkpoints
+
 
     def executar_uma_partida(self) -> int:
         """ Executa uma única partida (um episódio) entre os dois agentes. """
@@ -83,17 +85,25 @@ class Treinador:
         print(f"Interface Gráfica: {'Rich (Avançada)' if RICH_DISPONIVEL else 'TQDM (Básica)'}")
         print("="*50 + "\n")
 
+        # Inicializa lista de checkpoints
+        self._checkpoints = []
         vitorias_x_janela, vitorias_o_janela, empates_janela = 0, 0, 0
         ultimo_checkpoint = None
 
         if RICH_DISPONIVEL:
             # --- MODO RICH (Interface Avançada) ---
-            progresso = Progress(TextColumn("[bold blue]{task.description}"), BarColumn(), TextColumn("{task.percentage:>3.0f}%"), TimeRemainingColumn())
+            progresso = Progress(
+                TextColumn("[bold blue]{task.description}"), 
+                BarColumn(), 
+                TextColumn("{task.percentage:>3.0f}%"), 
+                TimeRemainingColumn()
+            )
             id_tarefa = progresso.add_task("Treinando", total=numero_de_partidas)
 
             def gerar_painel_estatisticas() -> Panel:
                 tabela = Table.grid(expand=True)
-                tabela.add_column(justify="left"); tabela.add_column(justify="right")
+                tabela.add_column(justify="left")
+                tabela.add_column(justify="right")
                 total_janela = vitorias_x_janela + vitorias_o_janela + empates_janela or 1
                 tabela.add_row("Vitórias X (janela)", f"[bold green]{vitorias_x_janela}[/]")
                 tabela.add_row("Vitórias O (janela)", f"[bold yellow]{vitorias_o_janela}[/]")
@@ -107,33 +117,56 @@ class Treinador:
                 tabela.add_row("Último Checkpoint", f"{ultimo_checkpoint or 'Nenhum'}")
                 return Panel(tabela, title="[bold]Estatísticas da Janela[/]", border_style="blue")
 
-            layout = Table.grid(expand=True)
-            layout.add_row(Panel(progresso, title="[bold]Progresso Geral[/]", border_style="green"), gerar_painel_estatisticas())
+            def gerar_layout():
+                """Gera o layout completo com progresso e estatísticas"""
+                layout = Table.grid(expand=True)
+                layout.add_row(
+                    Panel(progresso, title="[bold]Progresso Geral[/]", border_style="green"), 
+                    gerar_painel_estatisticas()
+                )
+                return layout
 
-            with Live(layout, refresh_per_second=10) as live:
+            with Live(gerar_layout(), refresh_per_second=10) as live:
                 for i in range(numero_de_partidas):
                     vencedor = self.executar_uma_partida()
-                    if vencedor == 1: vitorias_x_janela += 1
-                    elif vencedor == 2: vitorias_o_janela += 1
-                    else: empates_janela += 1
+                    if vencedor == 1: 
+                        vitorias_x_janela += 1
+                    elif vencedor == 2: 
+                        vitorias_o_janela += 1
+                    else: 
+                        empates_janela += 1
 
                     progresso.update(id_tarefa, advance=1)
 
                     if (i + 1) % intervalo_log == 0:
-                        live.update(layout) # Força atualização para exibir os números corretos
                         vitorias_x_janela, vitorias_o_janela, empates_janela = 0, 0, 0
                     
                     if (i + 1) % intervalo_checkpoint == 0:
                         self._salvar_checkpoint(i + 1)
                         ultimo_checkpoint = f"{i+1:,}"
 
-                    if i % 250 == 0: # Atualiza a tabela de estatísticas periodicamente
-                        layout.columns[1]._cells[0] = gerar_painel_estatisticas()
+                    # Atualiza o layout completo periodicamente
+                    if i % 250 == 0:
+                        live.update(gerar_layout())
+                
+                # Atualização final
+                live.update(gerar_layout())
         else:
             # --- MODO TQDM (Interface Básica) ---
             for i in tqdm(range(numero_de_partidas), desc="Treinando"):
                 vencedor = self.executar_uma_partida()
-                # A lógica de atualização do TQDM é mais simples e já está embutida no seu loop
+                if vencedor == 1: 
+                    vitorias_x_janela += 1
+                elif vencedor == 2: 
+                    vitorias_o_janela += 1
+                else: 
+                    empates_janela += 1
+
+                if (i + 1) % intervalo_checkpoint == 0:
+                    self._salvar_checkpoint(i + 1)
+        
+        # Exibe resumo de checkpoints
+        self._exibir_resumo_checkpoints()
         
         print("\n" + "="*50)
         print("✅ TREINAMENTO CONCLUÍDO!")
@@ -158,7 +191,64 @@ class Treinador:
         self.agente_x.salvar_memoria(str(caminho_x))
         self.agente_o.salvar_memoria(str(caminho_o))
     
-    def avaliar_agentes(self, numero_de_partidas: int = 100000):
+    def _salvar_checkpoint(self, numero_partida: int):
+        """ Salva o estado atual dos agentes em um checkpoint e registra metadados. """
+        caminho_x = self.pasta_modelos / f"agente_x_checkpoint_{numero_partida}.pkl"
+        caminho_o = self.pasta_modelos / f"agente_o_checkpoint_{numero_partida}.pkl"
+        
+        try:
+            self.agente_x.salvar_memoria(str(caminho_x))
+            self.agente_o.salvar_memoria(str(caminho_o))
+            
+            # Registra metadados do checkpoint
+            self._checkpoints.append({
+                'numero_partida': numero_partida,
+                'timestamp': datetime.now(),
+                'pasta': str(self.pasta_modelos),
+                'sucesso': True
+            })
+        except Exception as e:
+            # Registra falha
+            self._checkpoints.append({
+                'numero_partida': numero_partida,
+                'timestamp': datetime.now(),
+                'erro': str(e),
+                'sucesso': False
+            })
+
+    def _exibir_resumo_checkpoints(self):
+        """ Exibe um resumo limpo e organizado dos checkpoints salvos. """
+        if not self._checkpoints or len(self._checkpoints) == 0:
+            print('\n⚠️  Nenhum checkpoint foi salvo.\n')
+            return
+
+        checkpoints_sucesso = [cp for cp in self._checkpoints if cp.get('sucesso', False)]
+        
+        print('\n' + '━' * 80)
+        print('💾 CHECKPOINTS SALVOS')
+        print('━' * 80 + '\n')
+        
+        if checkpoints_sucesso:
+            print(f'✅ {len(checkpoints_sucesso)} checkpoint(s) criado(s) com sucesso\n')
+            print(f'📁 Pasta: {checkpoints_sucesso[0]["pasta"]}\n')
+            
+            for cp in checkpoints_sucesso:
+                data_formatada = cp['timestamp'].strftime('%d/%m/%Y às %H:%M')
+                partida_formatada = f"{cp['numero_partida']:,}".replace(',', '.')
+                print(f'  🎯 Partida {partida_formatada} — {data_formatada}')
+        
+        # Exibe erros se houver
+        checkpoints_erro = [cp for cp in self._checkpoints if not cp.get('sucesso', False)]
+        if checkpoints_erro:
+            print(f'\n❌ {len(checkpoints_erro)} checkpoint(s) com erro:\n')
+            for cp in checkpoints_erro:
+                partida_formatada = f"{cp['numero_partida']:,}".replace(',', '.')
+                print(f'  ⚠️  Partida {partida_formatada} — {cp.get("erro", "Erro desconhecido")}')
+        
+        print('\n' + '━' * 80 + '\n')
+
+    
+    def avaliar_agentes(self, numero_de_partidas: int = 10000):
             """
             Coloca os agentes para jogar um contra o outro em modo de "performance máxima",
             com uma interface rica para acompanhamento em tempo real.
@@ -180,14 +270,19 @@ class Treinador:
             
             vitorias_x, vitorias_o, empates = 0, 0, 0
 
-            # --- LÓGICA DE INTERFACE ---
             if RICH_DISPONIVEL:
-                progresso = Progress(TextColumn("[bold blue]{task.description}"), BarColumn(), TextColumn("{task.percentage:>3.0f}%"), TimeRemainingColumn())
+                progresso = Progress(
+                    TextColumn("[bold blue]{task.description}"), 
+                    BarColumn(), 
+                    TextColumn("{task.percentage:>3.0f}%"), 
+                    TimeRemainingColumn()
+                )
                 id_tarefa = progresso.add_task("Avaliando", total=numero_de_partidas)
 
                 def gerar_painel_estatisticas_avaliacao() -> Panel:
                     tabela = Table.grid(expand=True)
-                    tabela.add_column(justify="left"); tabela.add_column(justify="right")
+                    tabela.add_column(justify="left")
+                    tabela.add_column(justify="right")
                     total_partidas = vitorias_x + vitorias_o + empates or 1
                     
                     tabela.add_row("Vitórias X", f"[bold green]{vitorias_x}[/]")
@@ -200,10 +295,16 @@ class Treinador:
                     
                     return Panel(tabela, title="[bold]Estatísticas em Tempo Real[/]", border_style="blue")
 
-                layout = Table.grid(expand=True)
-                layout.add_row(Panel(progresso, title="[bold]Progresso da Avaliação[/]", border_style="green"), gerar_painel_estatisticas_avaliacao())
+                def gerar_layout():
+                    """Gera o layout completo"""
+                    layout = Table.grid(expand=True)
+                    layout.add_row(
+                        Panel(progresso, title="[bold]Progresso da Avaliação[/]", border_style="green"), 
+                        gerar_painel_estatisticas_avaliacao()
+                    )
+                    return layout
 
-                with Live(layout, refresh_per_second=10) as live:
+                with Live(gerar_layout(), refresh_per_second=10) as live:
                     for i in range(numero_de_partidas):
                         self.ambiente.reiniciar_partida()
                         while not self.ambiente.partida_finalizada:
@@ -213,18 +314,21 @@ class Treinador:
                             acao = agente_da_vez.escolher_acao(estado, acoes, em_treinamento=False)
                             self.ambiente.executar_jogada(acao)
 
-                        if self.ambiente.vencedor == 1: vitorias_x += 1
-                        elif self.ambiente.vencedor == 2: vitorias_o += 1
-                        else: empates += 1
+                        if self.ambiente.vencedor == 1: 
+                            vitorias_x += 1
+                        elif self.ambiente.vencedor == 2: 
+                            vitorias_o += 1
+                        else: 
+                            empates += 1
                         
                         progresso.update(id_tarefa, advance=1)
                         
-                        # Atualiza o painel de estatísticas periodicamente para não sobrecarregar
+                        # Atualiza o layout periodicamente
                         if i % 250 == 0:
-                            layout.columns[1]._cells[0] = gerar_painel_estatisticas_avaliacao()
+                            live.update(gerar_layout())
                     
-                    # Garante que a estatística final seja a mais atualizada
-                    layout.columns[1]._cells[0] = gerar_painel_estatisticas_avaliacao()
+                    # Atualização final garantida
+                    live.update(gerar_layout())
 
             else:
                 # Fallback para TQDM
@@ -248,6 +352,22 @@ class Treinador:
             print(f"Vitórias de O: {vitorias_o} ({(vitorias_o/numero_de_partidas)*100:.1f}%)")
             print(f"Empates: {empates} ({(empates/numero_de_partidas)*100:.1f}%)")
             print("="*50 + "\n")
+    
+    def mesclar_agentes_treinados(self):
+        """
+        Executa o script mesclar_modelos.py para criar o superagente.
+        """
+        print("\n" + "="*50)
+        print("🔄 EXECUTANDO MESCLAGEM DOS MODELOS...")
+        print("="*50 + "\n")
+        
+        # Executa o script Python
+        codigo_retorno = os.system('py -m mesclar_modelos')
+        
+        if codigo_retorno == 0:
+            print("\n✅ Mesclagem concluída com sucesso!")
+        else:
+            print(f"\n❌ Erro ao executar mesclagem (código: {codigo_retorno})")
 
 # --- Bloco de Execução Principal ---
 if __name__ == "__main__":
@@ -255,13 +375,15 @@ if __name__ == "__main__":
     # Roda um treinamento completo e salva os modelos.
     ambiente_padrao = AmbienteJogoDaVelha(dimensao=3)
     agente_x_padrao = AgenteQLearning(jogador=1)
-    agente_o_padrao = AgenteQLearning(jogador=2)
+    agente_o_padrao = AgenteQLearning( jogador=2)
     
     treinador_padrao = Treinador(agente_x_padrao, agente_o_padrao, ambiente_padrao)
-    treinador_padrao.treinar(numero_de_partidas=800000, intervalo_log=5000, intervalo_checkpoint=200000)
+    treinador_padrao.treinar(numero_de_partidas=200000, intervalo_log=500, intervalo_checkpoint=40000)
     
     treinador_padrao.avaliar_agentes()
-
+    
+    treinador_padrao.mesclar_agentes_treinados()
+    
     # Opção 2: Treinamento Customizado (ex: 4x4, 100.000 partidas)
     # Descomente as linhas abaixo para rodar um treino diferente.
     # print("\n--- INICIANDO TREINAMENTO CUSTOMIZADO 4x4 ---")
