@@ -7,6 +7,7 @@ venv/
 *.log
 models/
 checkpoints/
+modelos_treinados/
 estatisticas/
 fase-2/jogo_da_velha/estatisticas/
 fase-2/jogo_da_velha/estatisticas_jogador/
