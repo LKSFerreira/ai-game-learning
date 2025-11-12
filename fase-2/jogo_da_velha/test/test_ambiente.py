@@ -2,75 +2,190 @@
 Módulo: 🧪 test_ambiente.py
 Projeto: 📘 AI Game Learning
 
-Este arquivo contém todos os testes para a classe AmbienteJogoDaVelha.
-Ele é projetado para ser executado diretamente do terminal para verificar
-se o ambiente do jogo está funcionando corretamente.
+Este módulo contém uma suíte completa de testes para a classe AmbienteJogoDaVelha,
+verificando se o ambiente do jogo funciona corretamente em diferentes cenários.
 
-Para executar, use o comando no terminal:
-python fase-2_jogo_velha/test_ambiente.py
+Os testes verificam:
+- Criação de ambientes com diferentes tamanhos de tabuleiro
+- Execução de jogadas válidas e inválidas
+- Detecção correta de vitórias (linhas, colunas, diagonais)
+- Detecção correta de empates
+- Validação de ações (posições ocupadas, partidas finalizadas)
+- Funcionamento correto em tabuleiros de tamanhos diferentes (3x3, 4x4, etc.)
+
+Os testes são projetados para serem visuais e didáticos, simulando partidas
+completas e exibindo o tabuleiro em cada etapa, facilitando a compreensão
+do funcionamento do ambiente.
+
+Para executar os testes, use um dos seguintes comandos:
+    - python fase-2/jogo_da_velha/test/test_ambiente.py
+    - py -m test.test_ambiente (a partir do diretório fase-2/jogo_da_velha)
 """
 
-# 1. Importamos a "cozinha" (o ambiente) para que o "inspetor" (este script) possa usá-la.
+from typing import List
 from ambiente import AmbienteJogoDaVelha
 
-def simular_partida(jogo: AmbienteJogoDaVelha, titulo: str, jogadas: list[int]):
+
+def simular_partida_completa(ambiente: AmbienteJogoDaVelha, titulo: str, sequencia_jogadas: List[int]):
     """
-    Função auxiliar para simular uma partida completa e exibir os resultados.
-    
+    Simula uma partida completa do jogo executando uma sequência de jogadas.
+
+    Esta função auxiliar permite testar cenários específicos do jogo de forma
+    visual e didática. Ela executa cada jogada na sequência, exibe o tabuleiro
+    após cada jogada e identifica quando a partida termina.
+
+    A função é útil para:
+    - Testar cenários de vitória específicos
+    - Verificar detecção de empates
+    - Validar o comportamento do ambiente em situações controladas
+    - Demonstrar visualmente como o jogo funciona
+
     Args:
-        jogo (AmbienteJogoDaVelha): A instância do ambiente do jogo.
-        titulo (str): O título do cenário de teste.
-        jogadas (list[int]): Uma lista com a sequência de jogadas a serem executadas.
+        ambiente: Instância do AmbienteJogoDaVelha a ser testada.
+        titulo: Título descritivo do cenário de teste.
+            Exemplo: "X vence na primeira linha", "Empate (Velha)"
+        sequencia_jogadas: Lista de índices representando as posições onde
+            as jogadas serão executadas, na ordem especificada.
+            Cada jogada será executada pelo jogador da vez.
+
+    Note:
+        A função para automaticamente quando a partida termina (vitória ou empate).
+        Se a sequência de jogadas terminar antes do fim da partida, uma mensagem
+        de aviso é exibida.
+
+    Example:
+        >>> ambiente = AmbienteJogoDaVelha()
+        >>> simular_partida_completa(
+        ...     ambiente,
+        ...     "X vence na diagonal",
+        ...     [0, 3, 4, 1, 8]  # X vence na diagonal principal
+        ... )
     """
     print("=" * 50)
     print(f"➡️  Cenário: {titulo}")
     print("=" * 50)
 
-    jogo.reiniciar_partida()
+    # Reinicia o ambiente para começar uma partida limpa
+    ambiente.reiniciar_partida()
     print("Tabuleiro Inicial:")
-    jogo.exibir_tabuleiro()
+    ambiente.exibir_tabuleiro()
 
-    for i, acao in enumerate(jogadas):
-        jogador = 'X' if jogo.jogador_atual == 1 else 'O'
-        print(f"Turno {i + 1}: Jogador '{jogador}' joga na posição {acao}.")
+    # Executa cada jogada na sequência
+    for numero_turno, posicao_jogada in enumerate(sequencia_jogadas, start=1):
+        # Identifica qual jogador está jogando neste turno
+        simbolo_jogador = 'X' if ambiente.jogador_atual == 1 else 'O'
+        print(f"Turno {numero_turno}: Jogador '{simbolo_jogador}' joga na posição {posicao_jogada}.")
         
         try:
-            _, _, fim = jogo.executar_jogada(acao)
-            jogo.exibir_tabuleiro()
+            # Executa a jogada e obtém o resultado
+            _, _, partida_terminou = ambiente.executar_jogada(posicao_jogada)
+            
+            # Exibe o tabuleiro após a jogada
+            ambiente.exibir_tabuleiro()
 
-            if fim:
-                if jogo.vencedor == 0:
+            # Verifica se a partida terminou
+            if partida_terminou:
+                if ambiente.vencedor == 0:
+                    # Empate (velha)
                     print(f"🏁 Partida finalizada! Resultado: Empate (Velha)!\n")
                 else:
-                    simbolo_vencedor = 'X' if jogo.vencedor == 1 else 'O'
+                    # Vitória de um jogador
+                    simbolo_vencedor = 'X' if ambiente.vencedor == 1 else 'O'
                     print(f"🏁 Partida finalizada! Vencedor: Jogador '{simbolo_vencedor}'\n")
-                return # Termina a simulação para este cenário
+                return  # Termina a simulação para este cenário
                 
-        except ValueError as e:
-            print(f"❌ ERRO AO EXECUTAR JOGADA: {e}")
+        except ValueError as erro:
+            # Captura erros de jogadas inválidas (ex: posição ocupada)
+            print(f"❌ ERRO AO EXECUTAR JOGADA: {erro}")
             return
             
+    # Se chegou aqui, a sequência de jogadas terminou antes do fim da partida
     print("⚠️  A sequência de jogadas terminou antes do fim da partida.")
 
 
-# --- INÍCIO DA EXECUÇÃO DOS TESTES ---
-# Este bloco só é executado quando o arquivo é rodado diretamente.
-if __name__ == "__main__":
+def executar_todos_testes():
+    """
+    Executa toda a suíte de testes do AmbienteJogoDaVelha.
+
+    Esta função orquestra a execução de todos os testes, organizando-os por
+    tamanho de tabuleiro e tipo de cenário. Os testes são executados de forma
+    visual, exibindo o tabuleiro em cada etapa para facilitar a compreensão.
+
+    Os testes cobrem:
+    - Criação de ambientes com diferentes dimensões
+    - Cenários de vitória (linhas, colunas, diagonais)
+    - Cenários de empate
+    - Funcionamento em tabuleiros maiores (4x4)
+
+    Note:
+        Este é o ponto de entrada principal para validar a funcionalidade
+        do ambiente através de testes visuais e didáticos.
+
+    Example:
+        >>> executar_todos_testes()
+        ==================================================
+        🧪 INICIANDO BATERIA DE TESTES DO AMBIENTE 🧪
+        ...
+        ==================================================
+        ✅ BATERIA DE TESTES CONCLUÍDA!
+        ==================================================
+    """
     print("\n" + "=" * 50)
     print("🧪 INICIANDO BATERIA DE TESTES DO AMBIENTE 🧪")
+    print("=" * 50)
 
-    # Testes para o tabuleiro 3x3
-    jogo_3x3 = AmbienteJogoDaVelha()
+    # --- TESTES PARA TABULEIRO 3X3 (TRADICIONAL) ---
+    ambiente_3x3 = AmbienteJogoDaVelha(dimensao=3)
     print("\n✅ Jogo 3x3 criado com sucesso!")
-    simular_partida(jogo_3x3, "X vence na primeira linha", [0, 4, 1, 5, 2])
-    simular_partida(jogo_3x3, "Empate (Velha)", [0, 4, 8, 2, 6, 3, 5, 7, 1])
-    simular_partida(jogo_3x3, "O vence na coluna do meio", [0, 4, 2, 1, 3, 7])
+    
+    # Teste 1: Vitória na primeira linha (horizontal)
+    # X joga: 0, 1, 2 (primeira linha)
+    # O joga: 4, 5 (tentando bloquear, mas X vence primeiro)
+    simular_partida_completa(
+        ambiente_3x3,
+        "X vence na primeira linha",
+        [0, 4, 1, 5, 2]
+    )
+    
+    # Teste 2: Empate (velha)
+    # Sequência que resulta em empate: todas as casas ocupadas sem vencedor
+    simular_partida_completa(
+        ambiente_3x3,
+        "Empate (Velha)",
+        [0, 4, 8, 2, 6, 3, 5, 7, 1]
+    )
+    
+    # Teste 3: Vitória na coluna do meio (vertical)
+    # O vence na coluna central: posições 1, 4, 7
+    simular_partida_completa(
+        ambiente_3x3,
+        "O vence na coluna do meio",
+        [0, 4, 2, 1, 3, 7]
+    )
 
-    # Testes para o tabuleiro 4x4
-    jogo_4x4 = AmbienteJogoDaVelha(4)
+    # --- TESTES PARA TABULEIRO 4X4 (EXTENDIDO) ---
+    ambiente_4x4 = AmbienteJogoDaVelha(dimensao=4)
     print("\n✅ Jogo 4x4 criado com sucesso!")
-    simular_partida(jogo_4x4, "X vence na diagonal principal (4x4)", [0, 1, 5, 2, 10, 3, 15])
+    
+    # Teste 4: Vitória na diagonal principal em tabuleiro 4x4
+    # X vence na diagonal: posições 0, 5, 10, 15
+    simular_partida_completa(
+        ambiente_4x4,
+        "X vence na diagonal principal (4x4)",
+        [0, 1, 5, 2, 10, 3, 15]
+    )
 
     print("\n" + "=" * 50)
     print("✅ BATERIA DE TESTES CONCLUÍDA!")
     print("=" * 50 + "\n")
+
+
+# --- Bloco de Execução Principal ---
+if __name__ == "__main__":
+    """
+    Ponto de entrada do módulo quando executado diretamente.
+
+    Quando o arquivo é executado como script (não importado como módulo),
+    executa automaticamente toda a suíte de testes do ambiente.
+    """
+    executar_todos_testes()
