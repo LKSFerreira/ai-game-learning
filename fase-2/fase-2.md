@@ -403,13 +403,13 @@ O segredo é que nós diminuímos a "curiosidade" da IA ao longo do treinamento:
 
 ## 🚀 O que vamos construir na prática
 
-| Arquivo           | Responsabilidade                                                                |
-| ----------------- | ------------------------------------------------------------------------------- |
-| `ambiente.py`     | Contém as regras do Jogo da Velha (verificar vitória, empate, jogadas válidas). |
-| `agente.py`       | O cérebro da nossa IA. Contém a Tabela Q e a lógica do Q-Learning.                |
-| `treinador.py`    | Orquestra o treinamento, fazendo o Agente jogar milhares de partidas contra si.   |
-| `jogar.py`        | Um arquivo para você jogar uma partida contra a sua IA já treinada.             |
-| `visualizador.py` | (Opcional) Cria gráficos para vermos a evolução do aprendizado.                 |
+| Arquivo           | Responsabilidade                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------|
+| `ambiente.py`     | Contém as regras do Jogo da Velha (verificar vitória, empate, jogadas válidas).           |
+| `agente.py`       | O cérebro da nossa IA. Contém a Tabela Q e a lógica do Q-Learning.                        |
+| `treinador.py`    | Orquestra o treinamento, fazendo o Agente jogar milhares de partidas contra si.           |
+| `jogar.py`        | Um arquivo para você jogar uma partida contra a sua IA já treinada.                       |
+| `visualizador.py` | (Opcional) Cria gráficos para vermos a evolução do aprendizado. (Não faremos por enquanto)|
 
 ## ✅ Resumo da Fase 2 e Próximos Passos
 
