@@ -53,11 +53,11 @@ Aprendizado incremental, baseado em projetos reais:
   - Estrutura de pastas definida
   - Diretrizes de código e commits documentadas
 
-- [ ] **Fase 1: Fundamentos Teóricos**
+- [X] **Fase 1: Fundamentos Teóricos**
   - Conceitos de IA, ML, DL e RL
   - Componentes: Agente, Ambiente, Estado, Ação, Recompensa
 
-- [ ] **Fase 2: Jogo da Velha (Q-Learning)**
+- [X] **Fase 2: Jogo da Velha (Q-Learning)**
   - Implementação do algoritmo do zero
   - Treinamento com autoaprendizado (self-play)
   - Visualização da evolução do agente
