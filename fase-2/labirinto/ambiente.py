@@ -12,239 +12,367 @@ A classe é projetada para ser independente do algoritmo de IA, seguindo os
 padrões de ambientes de Aprendizado por Reforço.
 """
 
-# Começamos importando os tipos que usaremos. Fazer isso no início do arquivo
-# é uma boa prática em Python, pois deixa claro quais ferramentas de tipagem
-# nosso código irá utilizar.
 from typing import TypeAlias, Literal
 
-# Para tornar o código mais legível, vamos criar "apelidos" (TypeAlias) para os
-# tipos de dados mais complexos que usaremos repetidamente.
+# Apelidos de tipo para melhorar a legibilidade do código.
 Posicao: TypeAlias = tuple[int, int]
-Acao: TypeAlias = Literal["cima", "baixo", "esquerda", "direita"]
+DirecaoPadrao: TypeAlias = Literal["cima", "baixo", "esquerda", "direita"]
+AcaoUsuario: TypeAlias = Literal[
+    "W", "w", "A", "a", "S", "s", "D", "d", "cima", "baixo", "esquerda", "direita"
+]
 
+# Mapeamento de teclas WASD para direções padronizadas.
+#
+# É como mapear os controles do teclado para movimentos no jogo.
+# Isso permite que jogadores humanos usem W,A,S,D enquanto o código
+# internamente trabalha com nomes descritivos e legíveis.
+MAPEAMENTO_TECLAS: dict[str, DirecaoPadrao] = {
+    "W": "cima",
+    "w": "cima",
+    "A": "esquerda",
+    "a": "esquerda",
+    "S": "baixo",
+    "s": "baixo",
+    "D": "direita",
+    "d": "direita",
+    "cima": "cima",
+    "baixo": "baixo",
+    "esquerda": "esquerda",
+    "direita": "direita",
+}
 
-# --- PENSAMENTO 1: A Estrutura Fundamental (A Classe e o Construtor) ---
-# A primeira coisa que precisamos é de uma maneira de "criar" um labirinto.
-# Isso nos leva diretamente à necessidade de uma classe e seu construtor, o `__init__`.
-# O que um labirinto precisa para existir?
-# 1. Uma matriz (lista de listas) que define sua estrutura.
-# 2. Um ponto de partida para o agente.
-# 3. Um ponto final (a saída).
-# Esses serão os parâmetros do nosso construtor.
+# Conjunto de todas as ações válidas (para validação rápida).
+ACOES_VALIDAS: set[str] = set(MAPEAMENTO_TECLAS.keys())
+
 
 class Labirinto:
     """
     Representa o ambiente do labirinto, gerenciando o estado, ações e recompensas.
 
+    É como a "arena" ou "dungeon" no Ragnarok onde as batalhas acontecem.
+    O ambiente mantém as regras do jogo e garante que tudo funcione corretamente.
+
+    O labirinto é representado por uma matriz onde:
+    - ' ' (espaço) representa um caminho livre
+    - '#' representa uma parede/obstáculo
+    - 'A' é usado apenas para visualização (posição do agente)
+    - 'S' é usado apenas para visualização (saída do labirinto)
+
     Atributos:
-        matriz (list[list[str]]): A grade 2D que representa o labirinto.
+        _matriz (list[list[str]]): A grade 2D que representa o labirinto.
         estado_inicial (Posicao): A posição de início do agente.
         ponto_final (Posicao): A posição da saída do labirinto.
         posicao_agente (Posicao): A posição atual do agente, que muda a cada passo.
+        _numero_linhas (int): Quantidade de linhas do labirinto.
+        _numero_colunas (int): Quantidade de colunas do labirinto.
     """
 
     def __init__(
         self,
         matriz_labirinto: list[list[str]],
         ponto_inicial: Posicao,
-        ponto_final: Posicao
+        ponto_final: Posicao,
     ) -> None:
         """
         Inicializa o ambiente do Labirinto.
 
+        É como criar uma nova "dungeon" no Ragnarok com um mapa específico.
+        O agente começa em uma posição inicial e deve encontrar a saída.
+
         Args:
             matriz_labirinto (list[list[str]]): Uma grade representando o labirinto,
-                onde ' ' é caminho, '#' é parede e 'S' é a saída.
+                onde ' ' é caminho, '#' é parede.
             ponto_inicial (Posicao): Uma tupla (linha, coluna) para a posição inicial.
             ponto_final (Posicao): Uma tupla (linha, coluna) para a posição final.
+
+        Raises:
+            ValueError: Se a matriz do labirinto estiver vazia ou malformada.
         """
-        # Armazenamos os parâmetros recebidos como atributos da instância.
-        # O prefixo `_` em `_matriz` sugere que ele não deve ser modificado
-        # diretamente de fora da classe após a criação.
+        if not matriz_labirinto or len(matriz_labirinto) == 0:
+            raise ValueError("A matriz do labirinto não pode estar vazia.")
+        if not matriz_labirinto[0] or len(matriz_labirinto[0]) == 0:
+            raise ValueError("A matriz do labirinto está malformada.")
+
         self._matriz = matriz_labirinto
         self.estado_inicial = ponto_inicial
         self.ponto_final = ponto_final
-
-        # A posição do agente é a parte "dinâmica" do nosso ambiente.
-        # Ela começa, naturalmente, no ponto inicial.
         self.posicao_agente = self.estado_inicial
-
-        # Guardamos as dimensões para facilitar verificações futuras.
         self._numero_linhas = len(self._matriz)
         self._numero_colunas = len(self._matriz[0])
 
-
-    # --- PENSAMENTO 2: Reiniciando uma Tentativa ---
-    # No treinamento de IA, o agente tentará resolver o labirinto milhares de vezes.
-    # Cada tentativa é um "episódio". Precisamos de uma maneira de resetar o ambiente
-    # para o estado inicial no começo de cada episódio. O método `reiniciar` faz isso.
     def reiniciar(self) -> Posicao:
         """
         Reinicia o ambiente para o estado inicial.
 
         Isso coloca o agente de volta na posição de partida. É chamado no início
-        de cada novo episódio de treinamento.
+        de cada novo episódio de treinamento. É como resetar a dungeon para uma
+        nova tentativa no Ragnarok.
 
         Returns:
             Posicao: O estado inicial do agente após reiniciar.
         """
         self.posicao_agente = self.estado_inicial
-        # É convencional que a função de reset retorne o estado inicial,
-        # para que o agente saiba onde está começando o novo episódio.
         return self.posicao_agente
 
-
-    # --- PENSAMENTO 3: A Ação Principal (Movimento) ---
-    # Agora, a parte mais importante: como o agente interage com o mundo?
-    # Ele executa uma ação. Precisamos de um método que receba uma ação
-    # (como "cima") e atualize o estado do mundo de acordo.
-    # Este método é o coração do ciclo de Aprendizado por Reforço.
-    def executar_acao(self, acao: Acao) -> tuple[Posicao, float, bool]:
+    def executar_acao(self, acao: AcaoUsuario) -> tuple[Posicao, float, bool]:
         """
         Executa uma ação e atualiza o estado do ambiente.
 
+        É como um jogador fazer um movimento na dungeon: o ambiente processa
+        a ação, atualiza o estado, verifica se chegou na saída e retorna as
+        informações necessárias para o aprendizado.
+
+        Aceita tanto teclas WASD quanto nomes completos (cima, baixo, esquerda, direita).
+
         Args:
-            acao (Acao): A ação a ser executada ('cima', 'baixo', 'esquerda', 'direita').
+            acao (AcaoUsuario): A ação a ser executada ('W'/'w'/'cima', 'S'/'s'/'baixo',
+                'A'/'a'/'esquerda', 'D'/'d'/'direita').
 
         Returns:
             tuple[Posicao, float, bool]: Uma tupla contendo:
                 - O novo estado (a nova posição do agente).
                 - A recompensa recebida por realizar a ação.
                 - Um booleano indicando se o episódio terminou (agente na saída).
-        """
-        # Para manter este método limpo, vamos delegar a lógica de calcular
-        # a próxima posição para um método auxiliar (que criaremos a seguir).
-        proxima_posicao = self._calcular_proxima_posicao(acao)
 
-        # Antes de mover o agente, verificamos se o movimento é válido.
-        # Novamente, delegaremos essa lógica para outro método auxiliar.
+        Raises:
+            ValueError: Se a ação fornecida for inválida.
+        """
+        # Valida se a ação está no mapeamento
+        if acao not in ACOES_VALIDAS:
+            raise ValueError(
+                f'Ação inválida: "{acao}". Use: W/A/S/D (ou cima/baixo/esquerda/direita)'
+            )
+
+        # Normaliza a ação para o formato padrão interno
+        direcao_padrao = self._normalizar_acao(acao)
+
+        proxima_posicao = self._calcular_proxima_posicao(direcao_padrao)
+
         if self._eh_posicao_valida(proxima_posicao):
+            self._matriz[self.posicao_agente[0]][self.posicao_agente[1]] = "•"
             self.posicao_agente = proxima_posicao
 
-        # Após o movimento (ou tentativa), calculamos a recompensa.
-        # E, mais uma vez, usaremos um método auxiliar para isso.
         recompensa = self._calcular_recompensa()
-
-        # Verificamos se o episódio terminou.
-        terminou = self.posicao_agente == self.ponto_final
+        terminou = self._verificar_se_chegou_no_final()
 
         return self.posicao_agente, recompensa, terminou
 
+    def _normalizar_acao(self, acao: AcaoUsuario) -> DirecaoPadrao:
+        """
+        Normaliza a entrada do usuário para o formato padrão interno.
 
-    # --- PENSAMENTO 4: A Lógica Interna (Métodos Auxiliares) ---
-    # O método `executar_acao` precisa de várias verificações. Para manter o código
-    # organizado e legível (Princípio da Responsabilidade Única), criamos
-    # métodos "privados" (iniciados com `_`) para cada tarefa específica.
+        Converte teclas WASD (maiúsculas ou minúsculas) para as direções
+        padronizadas que o código usa internamente. Isso mantém o código
+        legível enquanto permite entradas amigáveis ao usuário.
 
-    def _calcular_proxima_posicao(self, acao: Acao) -> Posicao:
-        """Calcula a posição resultante de uma ação, sem mover o agente."""
+        Args:
+            acao (AcaoUsuario): A ação fornecida pelo usuário.
+
+        Returns:
+            DirecaoPadrao: A direção normalizada.
+        """
+        return MAPEAMENTO_TECLAS[acao]
+
+    def _calcular_proxima_posicao(self, direcao: DirecaoPadrao) -> Posicao:
+        """
+        Calcula a posição resultante de uma ação, sem mover o agente.
+
+        É como simular o movimento antes de executá-lo de fato. Útil para
+        verificar se a posição é válida antes de atualizar o estado.
+
+        Args:
+            direcao (DirecaoPadrao): A direção normalizada.
+
+        Returns:
+            Posicao: A posição resultante da ação.
+        """
         linha_atual, coluna_atual = self.posicao_agente
-        if acao == "cima":
+
+        if direcao == "cima":
             return (linha_atual - 1, coluna_atual)
-        if acao == "baixo":
+        if direcao == "baixo":
             return (linha_atual + 1, coluna_atual)
-        if acao == "esquerda":
+        if direcao == "esquerda":
             return (linha_atual, coluna_atual - 1)
-        if acao == "direita":
+        if direcao == "direita":
             return (linha_atual, coluna_atual + 1)
-        # Este retorno nunca deve acontecer se a tipagem de Acao for respeitada,
-        # mas é uma boa prática ter um caso padrão.
+
         return self.posicao_agente
 
-
     def _eh_posicao_valida(self, posicao: Posicao) -> bool:
-        """Verifica se uma posição está dentro dos limites e não é uma parede."""
+        """
+        Verifica se uma posição está dentro dos limites e não é uma parede.
+
+        É como verificar se o jogador pode andar naquela célula da dungeon
+        ou se há um obstáculo bloqueando o caminho.
+
+        Args:
+            posicao (Posicao): A posição a ser verificada (linha, coluna).
+
+        Returns:
+            bool: True se a posição é válida, False caso contrário.
+        """
         linha, coluna = posicao
-        # Verificação 1: Está dentro dos limites verticais?
+
+        # Verifica se está dentro dos limites verticais
         if not (0 <= linha < self._numero_linhas):
             return False
-        # Verificação 2: Está dentro dos limites horizontais?
+
+        # Verifica se está dentro dos limites horizontais
         if not (0 <= coluna < self._numero_colunas):
             return False
-        # Verificação 3: Não é uma parede?
-        if self._matriz[linha][coluna] == '#':
+
+        # Verifica se não é uma parede
+        if self._matriz[linha][coluna] == "#":
             return False
+
         return True
 
-
     def _calcular_recompensa(self) -> float:
-        """Calcula a recompensa com base na posição atual do agente."""
-        # Recompensa máxima por atingir o objetivo.
-        if self.posicao_agente == self.ponto_final:
-            return 10.0
-        # Penalidade pequena para cada movimento. Isso incentiva o agente a
-        # encontrar o caminho mais curto, em vez de vagar indefinidamente.
-        # É uma técnica comum chamada "reward shaping".
+        """
+        Calcula a recompensa com base na posição atual do agente.
+
+        Sistema de recompensas:
+        - +10.0 * (tamanho da matriz): Chegou na saída (objetivo alcançado!)
+        - -0.1: Qualquer outro movimento (incentiva caminhos mais curtos)
+
+        É como ganhar XP no Ragnarok: você ganha muito ao completar o objetivo,
+        mas perde um pouco a cada passo para incentivar eficiência.
+
+        Returns:
+            float: A recompensa calculada.
+        """
+        if self._verificar_se_chegou_no_final():
+            return 10.0 * (self._numero_linhas * self._numero_colunas)
         else:
             return -0.1
 
+    def _verificar_se_chegou_no_final(self) -> bool:
+        """
+        Verifica se o agente chegou ao ponto final.
 
-    # --- PENSAMENTO 5: Uma Forma de "Ver" o Ambiente ---
-    # Para depuração e visualização, é extremamente útil poder imprimir o estado
-    # atual do labirinto. O método especial `__str__` do Python é perfeito para isso.
-    # Ele define o que acontece quando chamamos `print(objeto_labirinto)`.
+        Returns:
+            bool: True se chegou na saída, False caso contrário.
+        """
+        return self.posicao_agente == self.ponto_final
+
     def __str__(self) -> str:
-        """Retorna uma representação em string do labirinto com o agente."""
-        # Criamos uma cópia da matriz para não modificar a original.
+        """
+        Retorna uma representação em string do labirinto com o agente.
+
+        Exibe o labirinto no console de forma visual, mostrando:
+        - 'A' para a posição atual do agente
+        - 'S' para a saída (ponto final)
+        - '#' para paredes
+        - Espaços para caminhos livres
+
+        É como o minimapa do Ragnarok, mostrando onde você está e onde
+        precisa chegar.
+
+        Returns:
+            str: Representação visual do labirinto.
+        """
+        # Cria uma cópia profunda da matriz para não modificar o original
         matriz_para_exibicao = [list(linha) for linha in self._matriz]
 
-        # Marcamos a posição do agente com 'A'.
+        # Marca a posição do agente
         linha_agente, coluna_agente = self.posicao_agente
-        matriz_para_exibicao[linha_agente][coluna_agente] = 'A'
+        matriz_para_exibicao[linha_agente][coluna_agente] = "A"
 
-        # Marcamos a saída com 'S' para clareza.
+        # Marca a saída
         linha_saida, coluna_saida = self.ponto_final
-        matriz_para_exibicao[linha_saida][coluna_saida] = 'S'
+        matriz_para_exibicao[linha_saida][coluna_saida] = "S"
 
-        # Convertemos a matriz de caracteres em uma única string formatada.
-        linhas_formatadas = [" ".join(celula for celula in linha) for linha in matriz_para_exibicao]
+        # Formata cada linha com espaçamento entre células
+        linhas_formatadas = [
+            " ".join(celula for celula in linha) for linha in matriz_para_exibicao
+        ]
+
         return "\n".join(linhas_formatadas)
 
+    def imprimir_labirinto(lab):
+        """
+        Função auxiliar para imprimir o estado atual do labirinto
+        em formato de GRADE, usando caracteres de desenho de caixa.
 
-# --- PENSAMENTO 6: Teste Rápido e Demonstração ---
-# Como sabemos se a nossa classe funciona? Podemos adicionar um bloco de código
-# que só é executado quando rodamos este arquivo diretamente.
-# Isso nos permite testar a classe de forma isolada e serve como um exemplo
-# de como usá-la.
-if __name__ == '__main__':
-    # Criamos uma matriz de exemplo para o labirinto.
-    LABIRINTO_EXEMPLO = [
-        [' ', '#', ' ', ' ', ' '],
-        [' ', '#', ' ', '#', ' '],
-        [' ', ' ', ' ', '#', ' '],
-        ['#', '#', ' ', ' ', ' '],
-        [' ', ' ', ' ', '#', 'S']  # 'S' aqui é apenas um marcador visual
-    ]
+        Marca:
+        'A' = Posição atual do Agente
+        'F' = Posição Final (objetivo)
+        '#' = Parede
+        ' ' = Caminho livre
+        '•' = Caminho por qual passou
+        """
 
-    PONTO_INICIAL_EXEMPLO = (0, 0)
-    PONTO_FINAL_EXEMPLO = (4, 4)
+        try:
+            # Cria uma cópia da matriz para "desenhar" nela
+            visualizacao = [list(linha) for linha in lab._matriz]
+            linhas = len(visualizacao)
+            if linhas == 0:
+                print("Labirinto vazio.")
+                return
+            colunas = len(visualizacao[0])
 
-    # 1. Criamos uma instância do nosso ambiente.
-    ambiente = Labirinto(
-        matriz_labirinto=LABIRINTO_EXEMPLO,
-        ponto_inicial=PONTO_INICIAL_EXEMPLO,
-        ponto_final=PONTO_FINAL_EXEMPLO
-    )
+            ponto_final = lab.ponto_final
+            pos_agente = lab.posicao_agente
 
-    # 2. Exibimos o estado inicial.
-    print("--- Estado Inicial ---")
-    print(ambiente)
-    print(f"Posição do Agente: {ambiente.posicao_agente}")
+        except AttributeError as e:
+            print(f"Erro: O objeto Labirinto não possui um atributo esperado: {e}")
+            print(str(lab))  # Fallback para o print antigo
+            return
+        except Exception as e:
+            print(f"Erro inesperado ao ler o labirinto: {e}")
+            print(str(lab))
+            return
 
-    # 3. Executamos algumas ações para testar a lógica.
-    print("\n--- Executando Ações ---")
-    # Movimento válido
-    estado, recompensa, terminou = ambiente.executar_acao("baixo")
-    print(f"Ação: 'baixo' -> Novo Estado: {estado}, Recompensa: {recompensa}, Terminou: {terminou}")
+        # 1. Marcar o ponto final (F)
+        if 0 <= ponto_final[0] < linhas and 0 <= ponto_final[1] < colunas:
+            if visualizacao[ponto_final[0]][ponto_final[1]] != "#":
+                visualizacao[ponto_final[0]][ponto_final[1]] = "F"
 
-    # Movimento inválido (bater na parede)
-    estado, recompensa, terminou = ambiente.executar_acao("direita")
-    print(f"Ação: 'direita' -> Novo Estado: {estado}, Recompensa: {recompensa}, Terminou: {terminou}")
-    print("\n--- Estado Após Ações ---")
-    print(ambiente)
+        # 2. Marcar o agente (A) (sobrepõe 'F' se estiver no final)
+        if 0 <= pos_agente[0] < linhas and 0 <= pos_agente[1] < colunas:
+            visualizacao[pos_agente[0]][pos_agente[1]] = "A"
 
-    # 4. Testamos o reinício.
-    ambiente.reiniciar()
-    print("\n--- Após Reiniciar ---")
-    print(ambiente)
-    print(f"Posição do Agente: {ambiente.posicao_agente}")
+        # --- Caracteres de Desenho (Baseado na sua sugestão) ---
+        BARRA_H = "───"  # A barra horizontal que você pediu
+        BARRA_V = "│"
+
+        # Cantos
+        CANTO_SE = "┌"
+        CANTO_SD = "┐"
+        CANTO_IE = "└"
+        CANTO_ID = "┘"
+
+        # Junções
+        JUNCAO_CIMA = "┬"
+        JUNCAO_BAIXO = "┴"
+        JUNCAO_ESQ = "├"
+        JUNCAO_DIR = "┤"
+        JUNCAO_MEIO = "┼"  # A junção que você pediu
+
+        # --- Lógica de Impressão da Grade ---
+
+        # 1. Linha Superior (Ex: ┌───┬───┬───┐)
+        linha_superior = CANTO_SE + JUNCAO_CIMA.join([BARRA_H] * colunas) + CANTO_SD
+        print(linha_superior)
+
+        # 2. Loop pelas linhas de conteúdo e separadores
+        for i, linha in enumerate(visualizacao):
+
+            # Linha de Conteúdo (Ex: │ A │ # │ F │)
+            # Usamos " {c} " para centralizar (3 caracteres, igual ao BARRA_H)
+            celulas_conteudo = [f" {c} " for c in linha]
+            linha_conteudo = BARRA_V + BARRA_V.join(celulas_conteudo) + BARRA_V
+            print(linha_conteudo)
+
+            # Linha Separadora (se não for a última)
+            # Ex: ├───┼───┼───┤
+            if i < linhas - 1:
+                linha_meio = (
+                    JUNCAO_ESQ + JUNCAO_MEIO.join([BARRA_H] * colunas) + JUNCAO_DIR
+                )
+                print(linha_meio)
+
+        # 3. Linha Inferior (Ex: └───┴───┴───┘)
+        linha_inferior = CANTO_IE + JUNCAO_BAIXO.join([BARRA_H] * colunas) + CANTO_ID
+        print(linha_inferior)
