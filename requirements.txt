@@ -6,10 +6,15 @@ matplotlib
 tqdm
 rich
 
+# Fase 2.1: Gráfico
+pygame
+pytest-mock
+
 # Fase 3: Visão Computacional
 opencv-python
 Pillow
 pyautogui
+
 
 # Fase 4: Deep Learning (quando chegar lá)
 # gymnasium>=0.29.0  # sucessor do OpenAI Gym
