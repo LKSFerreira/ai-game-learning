@@ -2,76 +2,72 @@
 
 echo "🚀 Iniciando a organização dos commits da Fase 2: Labirinto..."
 
-# --- Bloco 1: Estrutura Inicial e Ambiente do Labirinto ---
-# Este é o commit fundamental que introduz o novo projeto do labirinto.
-# Ele inclui a primeira versão da classe `Labirinto` e a estrutura de pastas.
-echo "✨ Adicionando e commitando a estrutura inicial e a classe Labirinto..."
-git add fase_2/labirinto/ambiente.py fase_2/labirinto/__init__.py fase_2/labirinto/test/__init__.py
-git commit -m "✨ feat: Cria estrutura inicial e ambiente base para o Labirinto
+# --- Bloco 1: Adição do Gerador de Labirintos ---
+# Introduzimos a capacidade de criar labirintos aleatórios.
+# Esta é uma funcionalidade fundamental e merece seu próprio commit,
+# junto com os testes que garantem sua corretude.
+echo "✨ Adicionando e commitando o gerador de labirintos e seus testes..."
+git add fase_2/labirinto/gerador_labirinto.py fase_2/labirinto/test/test_gerador_labirinto.py
+git commit -m "✨ feat: Adiciona gerador de labirintos aleatórios com testes
 
-- Adiciona o diretório 'fase_2/labirinto' para o novo projeto.
-- Implementa a classe 'Labirinto' em 'ambiente.py' com a lógica central:
-  - Inicialização com matriz, ponto inicial e final.
-  - Método 'executar_acao' para movimentação do agente.
-  - Lógica de recompensas (-0.1 por passo, +10.0 por vitória).
-  - Detecção de colisão com paredes e limites.
-  - Método 'reiniciar' para começar um novo episódio.
-- Adiciona docstrings e type hints iniciais."
+- Implementa 'gerador_labirinto.py' usando o algoritmo Recursive Backtracking
+  para criar labirintos perfeitos (sem loops e totalmente conectados).
+- A função 'gerar_labirinto' produz uma matriz compatível com a classe Labirinto.
 
-# --- Bloco 2: Testes Unitários para o Ambiente ---
-# Adiciona o arquivo de teste que valida o comportamento da classe Labirinto.
-# É um passo separado para manter a implementação e o teste em commits distintos.
-echo "🧪 Adicionando e commitando os testes unitários para o ambiente..."
-git add fase_2/labirinto/test/test_ambiente.py
-git commit -m "🧪 test: Adiciona testes unitários para a classe Labirinto
+- Adiciona 'test_gerador_labirinto.py' para validar as propriedades do gerador:
+  - Verifica as dimensões corretas da matriz resultante.
+  - Garante que as bordas externas são sempre paredes.
+  - Confirma que o labirinto gerado é totalmente conectado (sem ilhas)."
 
-- Cria 'test_ambiente.py' para validar o comportamento do ambiente.
-- Implementa testes para:
-  - Inicialização correta do labirinto.
-  - Movimentação válida do agente.
-  - Colisão com paredes e limites do mapa.
-  - Reinício do ambiente para o estado inicial.
-  - Verificação da recompensa correta ao atingir o ponto final.
-- Utiliza importações absolutas para compatibilidade com pytest."
+# --- Bloco 2: Consolidação dos Scripts de Demonstração ---
+# Refatoramos os scripts de execução, unificando `main.py` e `run.py`
+# no novo e mais completo `demonstracao_terminal.py`.
+echo "♻️ Adicionando e commitando a refatoração dos scripts de demonstração..."
+git add fase_2/labirinto/demonstracao_terminal.py fase_2/labirinto/main.py
+git commit -m "♻️ refactor: Unifica scripts de execução em 'demonstracao_terminal.py'
 
-# --- Bloco 3: Melhorias de Robustez e Flexibilidade ---
-# Este commit agrupa as melhorias significativas que você implementou,
-# tornando o ambiente muito mais poderoso e amigável.
-echo "♻️ Adicionando e commitando as melhorias de robustez e flexibilidade..."
-git add fase_2/labirinto/ambiente.py fase_2/labirinto/test/test_ambiente.py
-git commit -m "♻️ refactor: Aprimora ambiente com suporte a WASD e validações
+- Cria 'demonstracao_terminal.py' que integra a geração dinâmica do
+  labirinto com um modo de jogo interativo no terminal.
+- Adiciona a classe 'EstatisticasJogo' para rastrear movimentos e tempo.
+- Implementa comandos como 'stats' e 'limpar' para melhor UX.
+- Remove o antigo 'main.py', cuja funcionalidade foi absorvida."
 
-- **Flexibilidade de Ações:**
-  - Adiciona suporte para teclas WASD (maiúsculas e minúsculas).
-  - Implementa um sistema de normalização de ações para desacoplar a
-    entrada do usuário da lógica interna.
+# --- Bloco 3: Implementação do Jogo Gráfico Interativo ---
+# Este é o grande salto: a criação do jogo gráfico com Pygame.
+# Inclui o próprio jogo e os testes que validam sua lógica.
+echo "✨ Adicionando e commitando o jogo gráfico interativo com Pygame..."
+git add fase_2/labirinto/jogar.py fase_2/labirinto/test/test_jogar.py
+git commit -m "✨ feat: Implementa jogo gráfico interativo com Pygame em 'jogar.py'
 
-- **Robustez:**
-  - Adiciona validações no construtor para matrizes vazias/malformadas.
-  - Adiciona validação em 'executar_acao' para rejeitar ações inválidas.
+- Cria a classe 'JogoGrafico' para gerenciar a janela e o loop de jogo.
+- Renderiza o labirinto, agente e saída na tela.
+- Implementa movimento contínuo do jogador ao segurar as teclas (WASD/Setas).
+- Adiciona um rastro visual ('pegadas') para o caminho percorrido.
+- Implementa ajuste dinâmico do tamanho do labirinto para caber na tela do usuário.
 
-- **Melhorias de Design:**
-  - A recompensa por vitória agora é dinâmica, escalando com o tamanho
-    do labirinto.
-  - O agente agora deixa um rastro ('•') para visualização do caminho.
+- Adiciona 'test_jogar.py' com testes para a lógica do jogo:
+  - Testa a função de cálculo de dimensões ideais.
+  - Utiliza 'pytest-mock' para simular o Pygame e testar a lógica de
+    movimento sem depender de uma interface gráfica."
 
-- **Testes:**
-  - Atualiza e expande os testes para cobrir as novas funcionalidades,
-    incluindo testes para teclas WASD e validação de erros."
+# --- Bloco 4: Atualização de Dependências e Correções de Importação ---
+# Um commit de manutenção que agrupa as mudanças de configuração e as
+# correções de importação que fizemos para garantir a compatibilidade com pytest.
+echo "🧱 Adicionando e commitando atualização de dependências e correções..."
+git add requirements.txt fase_2/labirinto/jogar.py fase_2/labirinto/test/test_jogar.py
+git commit -m "🧱 build: Atualiza dependências e corrige importações relativas
 
-# --- Bloco 4: Adição do Script de Demonstração Visual ---
-# Adiciona o arquivo `main.py` que serve como um ponto de entrada para
-# testar e visualizar o ambiente de forma interativa no terminal.
-echo "✨ Adicionando e commitando o script de demonstração visual..."
-git add fase_2/labirinto/main.py fase_2/labirinto/ambiente.py
-git commit -m "✨ feat: Adiciona script 'main.py' e visualizador de grade no terminal
+- Adiciona 'pygame' e 'pytest-mock' ao 'requirements.txt'.
+- Corrige as importações em 'jogar.py' e 'test_jogar.py' para usar
+  importações relativas explícitas (com '.') e absolutas, garantindo
+  que os módulos funcionem tanto na execução direta quanto via pytest."
 
-- Cria o arquivo 'main.py' para servir como um exemplo executável
-  e ponto de teste visual do ambiente.
-- Implementa o método 'imprimir_labirinto' na classe Labirinto, que
-  desenha uma grade formatada no console para melhor visualização.
-- 'main.py' demonstra a inicialização, execução de uma sequência de
-  ações e o reinício do ambiente, usando a nova visualização."
+# --- Bloco 5: Limpeza do Script de Commit Antigo ---
+# Finalmente, atualizamos o próprio script de commit.
+echo "🧹 Adicionando e commitando a limpeza do script de commit..."
+git add commit.sh
+git commit -m "🧹 cleanup: Simplifica e atualiza o script de commit"
+
 
 echo "✅ Processo de commit finalizado!"
 echo "-------------------------------------"
