@@ -17,16 +17,16 @@ Aprendizado incremental, baseado em projetos reais:
 
 ## 🧭 Fases do Projeto
 
-| Fase                                     | Descrição                                                                      | Status                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------ | ------------------------- |
-| **0. Preparação do Ambiente**            | Configuração de Python, Git e dependências                                     | ✅ Concluída (26/10/2025) |
-| **1. Fundamentos de IA**                 | Conceitos essenciais de IA, ML, DL e RL                                         | ⏳ Em andamento           |
-| **2. Jogo da Velha (Q-Learning)**        | Implementação do algoritmo Q-Learning com self-play em um ambiente de lógica   | 🔜 Próxima                |
-| **3. Labirinto Simples (RL)**            | Agente aprendendo a encontrar a saída de um labirinto (ambiente de grade)        | 🔜 Planejada              |
-| **4. Dino do Chrome (Visão)**            | IA reativa que joga o Dino do Chrome usando captura de tela com OpenCV         | 🔜 Planejada              |
-| **5. Flappy Bird (Visão + Física)**      | IA que joga Flappy Bird, exigindo timing e previsão simples                      | 🔜 Planejada              |
-| **6. Breakout/Pong (Gymnasium + DQN)**   | Treinando um agente com Deep Q-Networks em um ambiente de simulação pronto     | 🔜 Planejada              |
-| **7. Ragnarok Online (Projeto Final)**   | Projeto final: IA jogando Ragnarok com Visão Computacional e integração AHK    | 🔜 Futura                 |
+| Fase                                   | Descrição                                                                    | Status                    |
+| -------------------------------------- | ---------------------------------------------------------------------------- | ------------------------- |
+| **0. Preparação do Ambiente**          | Configuração de Python, Git e dependências                                   | ✅ Concluída (26/10/2025) |
+| **1. Fundamentos de IA**               | Conceitos essenciais de IA, ML, DL e RL                                      | ⏳ Em andamento           |
+| **2. Jogo da Velha (Q-Learning)**      | Implementação do algoritmo Q-Learning com self-play em um ambiente de lógica | 🔜 Próxima                |
+| **3. Labirinto Simples (RL)**          | Agente aprendendo a encontrar a saída de um labirinto (ambiente de grade)    | 🔜 Planejada              |
+| **4. Dino do Chrome (Visão)**          | IA reativa que joga o Dino do Chrome usando captura de tela com OpenCV       | 🔜 Planejada              |
+| **5. Flappy Bird (Visão + Física)**    | IA que joga Flappy Bird, exigindo timing e previsão simples                  | 🔜 Planejada              |
+| **6. Breakout/Pong (Gymnasium + DQN)** | Treinando um agente com Deep Q-Networks em um ambiente de simulação pronto   | 🔜 Planejada              |
+| **7. Ragnarok Online (Projeto Final)** | Projeto final: IA jogando Ragnarok com Visão Computacional e integração AHK  | 🔜 Futura                 |
 
 ## 🧰 Tecnologias Utilizadas
 
@@ -48,33 +48,40 @@ Aprendizado incremental, baseado em projetos reais:
 
 ```md
 - [x] **Fase 0: Ambiente Configurado**
+
   - Python + ambiente virtual
   - Dependências básicas instaladas
   - Estrutura de pastas definida
   - Diretrizes de código e commits documentadas
 
-- [X] **Fase 1: Fundamentos Teóricos**
+- [x] **Fase 1: Fundamentos Teóricos**
+
   - Conceitos de IA, ML, DL e RL
   - Componentes: Agente, Ambiente, Estado, Ação, Recompensa
 
-- [X] **Fase 2: Jogo da Velha (Q-Learning)**
+- [x] **Fase 2: Jogo da Velha (Q-Learning)**
+
   - Implementação do algoritmo do zero
   - Treinamento com autoaprendizado (self-play)
   - Visualização da evolução do agente
 
 - [ ] **Fase 3: Labirinto Simples (RL)**
+
   - Desenvolvimento do ambiente de grade
   - Lógica do agente para explorar o ambiente
 
 - [ ] **Fase 4: Dino do Chrome (Visão)**
+
   - Captura e interpretação de tela em tempo real
   - Detecção de obstáculos e tomada de decisão
 
 - [ ] **Fase 5: Flappy Bird (Visão + Física)**
+
   - Detecção de canos e do personagem
   - Lógica de decisão baseada em timing
 
 - [ ] **Fase 6: Breakout/Pong (Gymnasium + DQN)**
+
   - Implementação de uma Rede Neural Profunda
   - Treinamento do agente usando Deep Q-Learning
 
@@ -86,25 +93,7 @@ Aprendizado incremental, baseado em projetos reais:
 
 ## 🗂️ Estrutura do Projeto
 
-```bash
-ai-game-learning/
-├── README.md              # Este arquivo
-├── diretrizes.md          # Padrões de código e commits
-├── requirements.txt       # Dependências Python
-├── .gitignore             # Arquivos ignorados pelo Git
-├── venv/                  # Ambiente virtual (não versionado)
-├── fase1_fundamentos/     # Conceitos teóricos e exemplos simples
-├── fase2_jogo_velha/      # Q-Learning e self-play
-├── fase3_labirinto/       # Agente em ambiente de grade
-├── fase4_dino_chrome/     # Visão computacional com OpenCV
-├── fase5_flappy_bird/     # Visão e timing
-├── fase6_gymnasium/       # Deep Q-Networks
-└── fase7_ragnarok/        # Projeto final com integração AHK
-```
-
-## 🧩 Como Executar
-
-1.  Clone este repositório:
+````bash
     ```bash
      git clone https://github.com/seuusuario/ai-game-learning.git
      cd ai-game-learning
@@ -133,4 +122,4 @@ ai-game-learning/
 - [ ] Implementar ambiente de treino do Jogo da Velha
 - [ ] Explorar integração entre Python e AHK
 - [ ] Iniciar primeiros experimentos de visão computacional
-```
+````
