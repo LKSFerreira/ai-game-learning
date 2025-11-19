@@ -9,8 +9,10 @@ models/
 checkpoints/
 modelos_treinados/
 estatisticas/
-fase-2/jogo_da_velha/estatisticas/
-fase-2/jogo_da_velha/estatisticas_jogador/
-fase-2/jogo_da_velha/graficos/
-fase-2/jogo_da_velha/modelos/
+*/estatisticas/
+*/estatisticas_jogador/
+*/graficos/
+*/modelos/
 commit.sh
+contexto_projeto.md
+gerar_contexto.py
