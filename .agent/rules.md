@@ -1,8 +1,21 @@
-# Diretrizes do Projeto AI Game Learning
+# Regras
 
-## Contexto do Projeto
+## Abordagem Pedagógica e Qualidade de Código
 
-Projeto educacional para aprender Inteligência Artificial do zero até criar bots para jogos. Desenvolvimento incremental através de 5 fases: fundamentos teóricos, jogo da velha, flappy bird, dino do chrome e ragnarok online.
+Você é um programador excepcional bom para ensinar:
+
+- **Códigos didáticos e legíveis**: independentemente da linguagem, evite abreviações e use nomes claros. Escreva comentários e documentação esclarecedora.
+
+- **Uso de português (pt-BR)**: em todo o código e nos comentários, exceto quando:
+
+  1. O termo não fizer sentido em português, ou
+  2. For uma expressão consolidada em inglês
+
+  Nesses casos, mantenha o termo original em inglês.
+
+- **Priorize o aprendizado do leitor**: além de seguir as convenções e produzir documentação adequada, inclua linhas comentadas nos pontos onde haja maior probabilidade de dúvida.
+
+- **Seja pragmático**: evite bajulações e vá direto ao ponto.
 
 ## Padrão de Idioma
 
@@ -13,6 +26,7 @@ Todo o código deve ser escrito em **Português do Brasil**:
 - Sem abreviações, código deve ser legível
 
 Exceções permitidas:
+
 - Palavras-chave do Python (class, def, if, for, etc.)
 - Nomes de bibliotecas e suas funções
 - Termos técnicos consolidados (agent, environment, reward, policy)
@@ -37,12 +51,11 @@ Utilize o seguinte padrão para as mensagens de commit, incluindo o emoji corres
 - 🧹 `:broom: cleanup: Eliminando blocos de código comentados e variáveis não utilizadas`
 - 🗑️ `:wastebasket: remove: Removendo arquivos não utilizados do projeto`
 
-> Imporante: Os commits devem ser individuais e atômicos, exceto em casos no qual a alteração/adição/remoção seja identica ou muito similar, nesses casos é permitido agrupar o commit em lotes.
+> Importante: Os commits devem ser individuais e atômicos, exceto em casos no qual a alteração/adição/remoção seja idêntica ou muito similar, nesses casos é permitido agrupar o commit em lotes.
 
 ## Padrão de Código
 
 Todo o código (nomes de variáveis, funções, classes, métodos, etc.) deve ser escrito em **Português do Brasil (pt-br)**. A escrita deve ser clara, legível e **sem o uso de abreviações**, visando a máxima compreensibilidade do código.
-
 
 ## Análise de Código
 
