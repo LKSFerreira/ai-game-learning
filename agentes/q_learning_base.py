@@ -102,13 +102,7 @@ class AgenteQLearningBase(ABC, Generic[Estado]):
         2. Aproveitamento (Exploitation): Caso contrário, escolho a MELHOR ação conhecida.
            Olho na minha Q-Table e vejo qual ação tem a maior nota.
 
-        TODO:
-        [ ] 1. Gerar número aleatório (0 a 1).
-        [ ] 2. Se menor que epsilon -> Retornar random.choice(acoes_possiveis).
-        [ ] 3. Se maior -> Encontrar a ação com maior Valor Q na q_table para este estado.
-        [ ] 4. Se o estado não existir ou todas ações forem iguais, desempatar aleatoriamente.
         """
-        # Implementação Pedagógica: O aluno deve preencher aqui ou usar a implementação abaixo como referência
 
         # 1. Exploração
         if random.random() < self.epsilon:
@@ -160,14 +154,6 @@ class AgenteQLearningBase(ABC, Generic[Estado]):
 
         Se o jogo acabou (finalizado=True), não existe futuro, então o termo 'gamma * max(...)' some.
 
-        TODO:
-        [ ] 1. Pegar Q_atual = self.obter_valor_q(estado, acao)
-        [ ] 2. Calcular Q_max_futuro:
-               - Se finalizado: 0.0
-               - Senão: max([self.obter_valor_q(proximo_estado, a) para a em acoes_proximo_estado])
-        [ ] 3. Calcular o erro (TD Error): (recompensa + gamma * Q_max_futuro) - Q_atual
-        [ ] 4. Novo Q = Q_atual + alpha * erro
-        [ ] 5. Salvar na self.q_table
         """
         # Garante que o estado existe na tabela
         if estado not in self.q_table:
