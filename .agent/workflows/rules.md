@@ -1,4 +1,11 @@
-# Regras
+---
+description: Regras para aprendizado
+---
+
+## Gemini Added Memories
+
+- Não crie commits git a menos que seja explicitamente solicitado pelo usuário.
+- O usuário é falante de português do Brasil (pt-br).
 
 ## Abordagem Pedagógica e Qualidade de Código
 
